@@ -12,13 +12,15 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.wpilibj.BuiltInAccelerometer;
 import edu.wpi.first.wpilibj.CAN;
-import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
+
+import com.ctre.phoenix.motorcontrol.VictorSPXControlMode;
+import com.ctre.phoenix.motorcontrol.can.VictorSPX;
+import com.ctre.phoenix.motorcontrol.ControlMode;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo.None;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
-
 import edu.wpi.first.wpilibj.Joystick;
 
 /**
@@ -34,8 +36,8 @@ public class Robot extends TimedRobot {
   private final SendableChooser<String> m_chooser = new SendableChooser<>();
 
     // controls
-  private Joystick joystick;
-  private Joystick joystick2;
+  private Joystick joystick; //joystick
+  private Joystick joystick2; //joystick2
 
   //accelerometer
   private BuiltInAccelerometer builtInAccelerometer;
@@ -68,6 +70,13 @@ public class Robot extends TimedRobot {
   private DifferentialDrive differentialDrive;
   private double driveSpeed = 1;
 
+ //functional motors
+  private VictorSPX funcMotor1; // VictorSPX, brushed motor controller (brush == brushes that transfer power) (brushless == electromagnites)
+  private VictorSPX funcMotor2; // brush
+  private VictorSPX funcMotor3; // brush
+  private VictorSPX funcMotor4;
+  private CANSparkMax funcMotor9;
+  private double funcModifier = 1;
 
   //acceleration limiters
   private SlewRateLimiter limiter0;
@@ -80,7 +89,7 @@ public class Robot extends TimedRobot {
    * initialization code.
    */
   @Override
-  public void robotInit() {
+  public void robotInit() { // init == initiate == happens once and at the beginning
     limiter0 = new SlewRateLimiter(2); //x-axis drive
     limiter1 = new SlewRateLimiter(1.5); //y-axis drive
     m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
@@ -89,26 +98,35 @@ public class Robot extends TimedRobot {
 
     // Initialize joystick object
     joystick = new Joystick(0); // Controller in port 0
+    joystick2 = new Joystick(1); // Controller in port 1
+
 
     // Drive motor object initialization
-    moveMotorID5 = new CANSparkMax(5, MotorType.kBrushless); // NEO motor with CAN ID 5
-    moveMotorID6 = new CANSparkMax(6, MotorType.kBrushless); // NEO motor with CAN ID 6
-    moveMotorID7 = new CANSparkMax(7, MotorType.kBrushed); // SIM motor with CAN ID 7
-    moveMotorID8 = new CANSparkMax(8, MotorType.kBrushed); // SIM motor with CAN ID 8
+    moveMotorID5 = new CANSparkMax(5, MotorType.kBrushless); // NEO motor with CAN ID 5, right side // BRUSHLESS
+    moveMotorID6 = new CANSparkMax(6, MotorType.kBrushless); // NEO motor with CAN ID 6, left side // BRUSHLESS
+    moveMotorID7 = new CANSparkMax(7, MotorType.kBrushed); // SIM motor with CAN ID 7, right side // BRUSH
+    moveMotorID8 = new CANSparkMax(8, MotorType.kBrushed); // SIM motor with CAN ID 8, left side // BRUSH
 
     // Fix wiring inversion
-    moveMotorID7.setInverted(true);
+    moveMotorID7.setInverted(true); // wiring thing, motor is flipped, bad wiring
 
     // Initialize motor groups
-    moveMotorID7.follow(moveMotorID5);
-    moveMotorID8.follow(moveMotorID6);
+    moveMotorID7.follow(moveMotorID5); // because they are on the same side
+    moveMotorID8.follow(moveMotorID6); // ^
   
 
     // Differential drive object initialization
-    differentialDrive = new DifferentialDrive(moveMotorID6, moveMotorID5);
+    differentialDrive = new DifferentialDrive(moveMotorID6, moveMotorID5); //class that handles arcade drive, (one stick controller)
     m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
     m_chooser.addOption("My Auto", kCustomAuto);
     SmartDashboard.putData("Auto choices", m_chooser);
+
+    //functional motors
+    funcMotor1 = new VictorSPX(1);
+    funcMotor2 = new VictorSPX(2);
+    funcMotor3 = new VictorSPX(3);
+    funcMotor4 = new VictorSPX(4);
+  
   }
 
   /**
@@ -119,7 +137,7 @@ public class Robot extends TimedRobot {
    * SmartDashboard integrated updating.
    */
   @Override
-  public void robotPeriodic() {}
+  public void robotPeriodic() {} // periodic == happens like every milisecond
 
   /**
    * This autonomous (along with the chooser code above) shows how to select between different
@@ -159,7 +177,20 @@ public class Robot extends TimedRobot {
   /** This function is called periodically during operator control. */
   @Override
   public void teleopPeriodic() {
+    //drives robot
     differentialDrive.arcadeDrive(limiter0.calculate(joystick.getX() * driveSpeed * 0.5), limiter1.calculate(joystick.getY() * driveSpeed));
+    //eventually will define what each word means, e.g limiter1 refers safety in limiting acceleration speed
+    //moves arm up and down, fractions of a movemnet do not count to prevent drifting
+    if (Math.abs(joystick2.getY()) <= 0.1)
+    {
+      funcMotor1.set(ControlMode.PercentOutput, 0);
+      funcMotor2.set(ControlMode.PercentOutput, 0); //outputs changed to 0, results in no motor function
+    }
+    else
+    {
+      funcMotor1.set(ControlMode.PercentOutput, -1*joystick2.getY());
+      funcMotor2.set(ControlMode.PercentOutput, -1*joystick2.getY()); // output value == getY (joystick) and -1 because wiring
+    }
   }
 
   /** This function is called once when the robot is disabled. */

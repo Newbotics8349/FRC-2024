@@ -14,12 +14,9 @@ import edu.wpi.first.wpilibj.CAN;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 
-import com.ctre.phoenix.motorcontrol.VictorSPXControlMode;
-import com.ctre.phoenix.motorcontrol.can.VictorSPX;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.None;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
-import com.ctre.phoenix.motorcontrol.ControlMode;
 
 import edu.wpi.first.wpilibj.Joystick;
 
@@ -41,7 +38,6 @@ public class Robot extends TimedRobot {
 
   //accelerometer
   private BuiltInAccelerometer builtInAccelerometer;
-  private ADIS16448_IMU gyro;
   final int accelCalibrateBtn = 2;
   final int autoBalanceBtn = 3;
   private double pitchBias = 0;

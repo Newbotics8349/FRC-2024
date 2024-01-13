@@ -8,6 +8,56 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
+// controls
+  private Joystick joystick;
+  private Joystick joystick2;
+
+  //accelerometer
+  private BuiltInAccelerometer builtInAccelerometer;
+  private ADIS16448_IMU gyro;
+  final int accelCalibrateBtn = 2;
+  final int autoBalanceBtn = 3;
+  private double pitchBias = 0;
+  private double gravity = -9.81;
+
+  // drive modifiers mapping
+  final int driveSpeedUpBtn = 5;
+  final int driveSpeedDownBtn = 6;
+  final int driveReverseBtn = 1;
+
+  // functional button mapping
+  final int funcReverseBtn = 1;
+  final int openGripper = 5;
+  final int closeGripper = 6;
+  //final int func1Btn = 1;
+  //final int func2Btn = 2;
+  //final int func3Btn = 3;
+  //final int func4Btn = 4;
+
+  //drive motors and control objects
+  private CANSparkMax moveMotorID5;
+  private CANSparkMax moveMotorID7;
+  private MotorControllerGroup rightMoveMotors;
+  private CANSparkMax moveMotorID6;
+  private CANSparkMax moveMotorID8;
+  private MotorControllerGroup leftMoveMotors;
+  private DifferentialDrive differentialDrive;
+  private double driveSpeed = 1;
+  
+  //functional motors
+  private VictorSPX funcMotor1;
+  private VictorSPX funcMotor2;
+  private VictorSPX funcMotor3;
+  private VictorSPX funcMotor4;
+  private CANSparkMax funcMotor9;
+  private double funcModifier = 1;
+
+  //acceleration limiters
+  private SlewRateLimiter limiter0;
+  private SlewRateLimiter limiter1;
+  private SlewRateLimiter limiter2;
+  private SlewRateLimiter limiter3;
+
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
  * each mode, as described in the TimedRobot documentation. If you change the name of this class or

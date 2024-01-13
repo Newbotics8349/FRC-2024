@@ -9,6 +9,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.wpilibj.BuiltInAccelerometer;
 import edu.wpi.first.wpilibj.CAN;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
@@ -57,12 +58,54 @@ public class Robot extends TimedRobot {
   //final int func3Btn = 3;
   //final int func4Btn = 4;
 
+  //drive motors and control objects
+  private CANSparkMax moveMotorID5;
+  private CANSparkMax moveMotorID7;
+  private MotorControllerGroup rightMoveMotors;
+  private CANSparkMax moveMotorID6;
+  private CANSparkMax moveMotorID8;
+  private MotorControllerGroup leftMoveMotors;
+  private DifferentialDrive differentialDrive;
+  private double driveSpeed = 1;
+
+
+  //acceleration limiters
+  private SlewRateLimiter limiter0;
+  private SlewRateLimiter limiter1;
+  private SlewRateLimiter limiter2;
+  private SlewRateLimiter limiter3;
+
     /**
    * This function is run when the robot is first started up and should be used for any
    * initialization code.
    */
   @Override
   public void robotInit() {
+    limiter0 = new SlewRateLimiter(2); //x-axis drive
+    limiter1 = new SlewRateLimiter(1.5); //y-axis drive
+    m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
+    m_chooser.addOption("My Auto", kCustomAuto);
+    SmartDashboard.putData("Auto choices", m_chooser);
+
+    // Initialize joystick object
+    joystick = new Joystick(0); // Controller in port 0
+
+    // Drive motor object initialization
+    moveMotorID5 = new CANSparkMax(5, MotorType.kBrushless); // NEO motor with CAN ID 5
+    moveMotorID6 = new CANSparkMax(6, MotorType.kBrushless); // NEO motor with CAN ID 6
+    moveMotorID7 = new CANSparkMax(7, MotorType.kBrushed); // SIM motor with CAN ID 7
+    moveMotorID8 = new CANSparkMax(8, MotorType.kBrushed); // SIM motor with CAN ID 8
+
+    // Fix wiring inversion
+    moveMotorID7.setInverted(true);
+
+    // Initialize motor groups
+    moveMotorID7.follow(moveMotorID5);
+    moveMotorID8.follow(moveMotorID6);
+  
+
+    // Differential drive object initialization
+    differentialDrive = new DifferentialDrive(moveMotorID6, moveMotorID5);
     m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
     m_chooser.addOption("My Auto", kCustomAuto);
     SmartDashboard.putData("Auto choices", m_chooser);
@@ -115,7 +158,9 @@ public class Robot extends TimedRobot {
 
   /** This function is called periodically during operator control. */
   @Override
-  public void teleopPeriodic() {}
+  public void teleopPeriodic() {
+    differentialDrive.arcadeDrive(limiter0.calculate(joystick.getX() * driveSpeed * 0.5), limiter1.calculate(joystick.getY() * driveSpeed));
+  }
 
   /** This function is called once when the robot is disabled. */
   @Override

@@ -53,31 +53,7 @@ public class Robot extends TimedRobot {
   //final int func3Btn = 3;
   //final int func4Btn = 4;
 
-  //drive motors and control objects
-  private CANSparkMax moveMotorID5;
-  private CANSparkMax moveMotorID7;
-  private MotorControllerGroup rightMoveMotors;
-  private CANSparkMax moveMotorID6;
-  private CANSparkMax moveMotorID8;
-  private MotorControllerGroup leftMoveMotors;
-  private DifferentialDrive differentialDrive;
-  private double driveSpeed = 1;
-  
-  //functional motors
-  private VictorSPX funcMotor1;
-  private VictorSPX funcMotor2;
-  private VictorSPX funcMotor3;
-  private VictorSPX funcMotor4;
-  private CANSparkMax funcMotor9;
-  private double funcModifier = 1;
-
-  //acceleration limiters
-  private SlewRateLimiter limiter0;
-  private SlewRateLimiter limiter1;
-  private SlewRateLimiter limiter2;
-  private SlewRateLimiter limiter3;
-
-  /**
+    /**
    * This function is run when the robot is first started up and should be used for any
    * initialization code.
    */

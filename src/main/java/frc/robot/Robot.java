@@ -27,6 +27,7 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.SPI;
+import edu.wpi.first.wpilibj.SerialPort;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -89,8 +90,8 @@ public class Robot extends TimedRobot {
   private SlewRateLimiter limiter2;
   private SlewRateLimiter limiter3;
 
-  // navX MXP using SPI
-  AHRS gyro = new AHRS(SPI.Port.kMXP);
+  // navX MXP using USB
+  AHRS gyro = new AHRS(SerialPort.Port.kUSB);
 
     /**
    * This function is run when the robot is first started up and should be used for any

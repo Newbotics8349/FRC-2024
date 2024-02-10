@@ -15,15 +15,18 @@ import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.wpilibj.BuiltInAccelerometer;
 import edu.wpi.first.wpilibj.CAN;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 
 import com.ctre.phoenix.motorcontrol.VictorSPXControlMode;
 import com.ctre.phoenix.motorcontrol.can.VictorSPX;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo.None;
+import com.kauailabs.navx.frc.AHRS;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.SPI;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -86,12 +89,17 @@ public class Robot extends TimedRobot {
   private SlewRateLimiter limiter2;
   private SlewRateLimiter limiter3;
 
+  // navX MXP using SPI
+  AHRS gyro = new AHRS(SPI.Port.kMXP);
+
     /**
    * This function is run when the robot is first started up and should be used for any
    * initialization code.
    */
   @Override
   public void robotInit() { // init == initiate == happens once and at the beginning
+    // Places a compass indicator for the gyro heading on the dashboard
+    Shuffleboard.getTab("Compass").add(gyro);
     limiter0 = new SlewRateLimiter(2); //x-axis drive
     limiter1 = new SlewRateLimiter(1.5); //y-axis drive
     m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
@@ -106,8 +114,8 @@ public class Robot extends TimedRobot {
     // Drive motor object initialization
     moveMotorID5 = new CANSparkMax(5, MotorType.kBrushless); // NEO motor with CAN ID 5, right side // BRUSHLESS
     moveMotorID6 = new CANSparkMax(6, MotorType.kBrushless); // NEO motor with CAN ID 6, left side // BRUSHLESS
-    moveMotorID7 = new CANSparkMax(7, MotorType.kBrushed); // SIM motor with CAN ID 7, right side // BRUSH
-    moveMotorID8 = new CANSparkMax(8, MotorType.kBrushed); // SIM motor with CAN ID 8, left side // BRUSH
+    moveMotorID7 = new CANSparkMax(7, MotorType.kBrushed); // CIM motor with CAN ID 7, right side // BRUSH
+    moveMotorID8 = new CANSparkMax(8, MotorType.kBrushed); // CIM motor with CAN ID 8, left side // BRUSH
 
     // Fix wiring inversion
     moveMotorID7.setInverted(true); // wiring thing, motor is flipped, bad wiring
@@ -182,7 +190,7 @@ public class Robot extends TimedRobot {
     //drives robot
     differentialDrive.arcadeDrive(limiter0.calculate(joystick.getX() * driveSpeed * 0.5), limiter1.calculate(joystick.getY() * driveSpeed));
     //eventually will define what each word means, e.g limiter1 refers safety in limiting acceleration speed
-    //moves arm up and down, fractions of a movemnet do not count to prevent drifting
+    //moves arm up and down, fractions of a movement do not count to prevent drifting
     if (Math.abs(joystick2.getY()) <= 0.1)
     {
       funcMotor1.set(ControlMode.PercentOutput, 0);

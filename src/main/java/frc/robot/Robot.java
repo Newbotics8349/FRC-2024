@@ -12,13 +12,21 @@ import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.math.filter.SlewRateLimiter;
+import edu.wpi.first.networktables.GenericEntry;
+import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.wpilibj.BuiltInAccelerometer;
 import edu.wpi.first.wpilibj.CAN;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
+
 
 import com.ctre.phoenix.motorcontrol.VictorSPXControlMode;
 import com.ctre.phoenix.motorcontrol.can.VictorSPX;
+
+import java.util.Map;
+
 import com.ctre.phoenix.motorcontrol.ControlMode;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo.None;
@@ -77,11 +85,11 @@ public class Robot extends TimedRobot {
   private double driveSpeed = 1;
 
  //functional motors
-  private VictorSPX funcMotor1; // VictorSPX, brushed motor controller (brush == brushes that transfer power) (brushless == electromagnites)
-  private VictorSPX funcMotor2; // brush
-  private VictorSPX funcMotor3; // brush
-  private VictorSPX funcMotor4;
-  private CANSparkMax funcMotor9;
+  private CANSparkMax armMotor1;
+  private CANSparkMax armMotor2; 
+  private CANSparkMax intakeMotor;
+  private CANSparkMax shooterMotor1;
+  private CANSparkMax shooterMotor2;
   private double funcModifier = 1;
 
   //acceleration limiters
@@ -91,7 +99,9 @@ public class Robot extends TimedRobot {
   private SlewRateLimiter limiter3;
 
   // navX MXP using USB
-  AHRS gyro = new AHRS(SerialPort.Port.kUSB);
+  private AHRS gyro;
+  private GenericEntry gyroCompassEntry; // Declare at the class level
+
 
     /**
    * This function is run when the robot is first started up and should be used for any
@@ -100,7 +110,11 @@ public class Robot extends TimedRobot {
   @Override
   public void robotInit() { // init == initiate == happens once and at the beginning
     // Places a compass indicator for the gyro heading on the dashboard
-    Shuffleboard.getTab("Compass").add(gyro);
+    gyro = new AHRS(SerialPort.Port.kUSB);
+    ShuffleboardTab compassTab = Shuffleboard.getTab("Compass");
+    gyroCompassEntry = compassTab.add("Gyro Compass", 0)
+    .withWidget(BuiltInWidgets.kGyro)
+    .getEntry();
     limiter0 = new SlewRateLimiter(2); //x-axis drive
     limiter1 = new SlewRateLimiter(1.5); //y-axis drive
     m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
@@ -113,10 +127,10 @@ public class Robot extends TimedRobot {
 
 
     // Drive motor object initialization
-    moveMotorID5 = new CANSparkMax(5, MotorType.kBrushless); // NEO motor with CAN ID 5, right side // BRUSHLESS
-    moveMotorID6 = new CANSparkMax(6, MotorType.kBrushless); // NEO motor with CAN ID 6, left side // BRUSHLESS
-    moveMotorID7 = new CANSparkMax(7, MotorType.kBrushed); // CIM motor with CAN ID 7, right side // BRUSH
-    moveMotorID8 = new CANSparkMax(8, MotorType.kBrushed); // CIM motor with CAN ID 8, left side // BRUSH
+    moveMotorID5 = new CANSparkMax(5, MotorType.kBrushless); // NEO motor with CAN ID 5, right side
+    moveMotorID6 = new CANSparkMax(6, MotorType.kBrushless); // NEO motor with CAN ID 6, left side
+    moveMotorID7 = new CANSparkMax(7, MotorType.kBrushless); // NEo motor with CAN ID 7, right side
+    moveMotorID8 = new CANSparkMax(8, MotorType.kBrushless); // NEO motor with CAN ID 8, left side
 
     // Fix wiring inversion
     moveMotorID7.setInverted(true); // wiring thing, motor is flipped, bad wiring
@@ -133,10 +147,11 @@ public class Robot extends TimedRobot {
     SmartDashboard.putData("Auto choices", m_chooser);
 
     //functional motors
-    funcMotor1 = new VictorSPX(1);
-    funcMotor2 = new VictorSPX(2);
-    funcMotor3 = new VictorSPX(3);
-    funcMotor4 = new VictorSPX(4);
+    armMotor1 = new CANSparkMax(1, MotorType.kBrushless);
+    armMotor2 = new CANSparkMax(2, MotorType.kBrushless);
+    intakeMotor = new CANSparkMax(3, MotorType.kBrushless);
+    shooterMotor1 = new CANSparkMax(4, MotorType.kBrushless);
+    shooterMotor2 = new CANSparkMax(9, MotorType.kBrushless);
   
   }
 
@@ -148,7 +163,15 @@ public class Robot extends TimedRobot {
    * SmartDashboard integrated updating.
    */
   @Override
-  public void robotPeriodic() {} // periodic == happens like every milisecond
+  public void robotPeriodic() {
+    // Read the current yaw angle from the gyro
+    double yawAngle = gyro.getYaw();
+    // Convert the yaw angle to a 0-360 range for compass heading
+    double compassHeading = yawAngle < 0 ? 360 + yawAngle : yawAngle;
+    // Update the Shuffleboard compass widget with the current heading
+    gyroCompassEntry.setDouble(compassHeading);
+}
+   // periodic == happens like every milisecond
 
   /**
    * This autonomous (along with the chooser code above) shows how to select between different
@@ -194,13 +217,13 @@ public class Robot extends TimedRobot {
     //moves arm up and down, fractions of a movement do not count to prevent drifting
     if (Math.abs(joystick2.getY()) <= 0.1)
     {
-      funcMotor1.set(ControlMode.PercentOutput, 0);
-      funcMotor2.set(ControlMode.PercentOutput, 0); //outputs changed to 0, results in no motor function
+      armMotor1.set(0);
+      armMotor2.set(0); //outputs changed to 0, results in no motor function
     }
     else
     {
-      funcMotor1.set(ControlMode.PercentOutput, -1*joystick2.getY());
-      funcMotor2.set(ControlMode.PercentOutput, -1*joystick2.getY()); // output value == getY (joystick) and -1 because wiring
+      armMotor1.set(-1*joystick2.getY());
+      armMotor2.set(-1*joystick2.getY()); // output value == getY (joystick) and -1 because wiring
     }
   }
 

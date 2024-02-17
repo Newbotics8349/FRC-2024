@@ -15,4 +15,5 @@ public class AprilTag {
         pitch = target.getPitch();
         area = target.getArea();
     }
+
 }

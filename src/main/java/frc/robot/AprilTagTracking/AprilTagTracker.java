@@ -1,6 +1,7 @@
 package frc.robot.AprilTagTracking;
 
 import java.util.List;
+import java.util.ArrayList;
 
 import org.photonvision.PhotonCamera;
 import org.photonvision.targeting.PhotonPipelineResult;
@@ -15,6 +16,7 @@ public class AprilTagTracker {
     public AprilTagTracker(String cameraNameString)
     {
         camera = new PhotonCamera(cameraNameString);
+        tags = new ArrayList<AprilTag>();
     }
 
     public void UpdateTracker()

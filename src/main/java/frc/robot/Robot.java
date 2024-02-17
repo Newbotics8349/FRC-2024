@@ -21,13 +21,7 @@ import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 
-
-import com.ctre.phoenix.motorcontrol.VictorSPXControlMode;
-import com.ctre.phoenix.motorcontrol.can.VictorSPX;
-
 import java.util.Map;
-
-import com.ctre.phoenix.motorcontrol.ControlMode;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo.None;
 import com.kauailabs.navx.frc.AHRS;
@@ -36,6 +30,7 @@ import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.SerialPort;
+import edu.wpi.first.wpilibj.DigitalInput;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -100,21 +95,45 @@ public class Robot extends TimedRobot {
 
   // navX MXP using USB
   private AHRS gyro;
-  private GenericEntry gyroCompassEntry; // Declare at the class level
+  private GenericEntry gyroCompassEntry;
 
+  //proximity sensor to detect when note is in intake
+  private DigitalInput proximitySensor;
 
+  public void checkSensorandNotify() { // method to return whether a note is loaded or not
+    boolean noNoteDetected = proximitySensor.get(); // This will return true if nothing is detected 
+
+//====================================================
+
+    // Assuming the sensor output is HIGH when an object is detected
+    if (noNoteDetected) { // When no note is detected, this if statement occurs
+        SmartDashboard.putString("Alert", "No note in the intake.");}
+    else{ // When note is detected, this else statement occurs
+        SmartDashboard.putString("Alert", "Note is in the intake!");}
+    }
     /**
    * This function is run when the robot is first started up and should be used for any
    * initialization code.
    */
+
+//===================================================
+
   @Override
   public void robotInit() { // init == initiate == happens once and at the beginning
+    
+    // Adding a text field widget to the default tab for the sensor message
+    proximitySensor = new DigitalInput(1); // Use the actual DIO port number
+    Shuffleboard.getTab("SmartDashboard")
+    .add("Sensor Message", "No object detected") // Initial message
+    .getEntry();
+
     // Places a compass indicator for the gyro heading on the dashboard
     gyro = new AHRS(SerialPort.Port.kUSB);
     ShuffleboardTab compassTab = Shuffleboard.getTab("Compass");
     gyroCompassEntry = compassTab.add("Gyro Compass", 0)
     .withWidget(BuiltInWidgets.kGyro)
     .getEntry();
+
     limiter0 = new SlewRateLimiter(2); //x-axis drive
     limiter1 = new SlewRateLimiter(1.5); //y-axis drive
     m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
@@ -164,6 +183,8 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void robotPeriodic() {
+    //detects if there is a note in the intake
+    checkSensorandNotify();
     // Read the current yaw angle from the gyro
     double yawAngle = gyro.getYaw();
     // Convert the yaw angle to a 0-360 range for compass heading

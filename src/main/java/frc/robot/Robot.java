@@ -96,20 +96,26 @@ public class Robot extends TimedRobot {
   // navX MXP using USB
   private AHRS gyro;
   private GenericEntry gyroCompassEntry;
+  // disbales drive when needed
+  private boolean enableDrive = true;
 
   //proximity sensor to detect when note is in intake
   private DigitalInput proximitySensor;
 
-  public void checkSensorandNotify() { // method to return whether a note is loaded or not
+  public boolean checkSensorandNotify() { // method to return whether a note is loaded or not
     boolean noNoteDetected = proximitySensor.get(); // This will return true if nothing is detected 
+
 
 //====================================================
 
     // Assuming the sensor output is HIGH when an object is detected
     if (noNoteDetected) { // When no note is detected, this if statement occurs
         SmartDashboard.putString("Alert", "No note in the intake.");}
+    // turn LED colour
     else{ // When note is detected, this else statement occurs
         SmartDashboard.putString("Alert", "Note is in the intake!");}
+    return noNoteDetected; 
+      
     }
     /**
    * This function is run when the robot is first started up and should be used for any
@@ -227,13 +233,17 @@ public class Robot extends TimedRobot {
 
   /** This function is called once when teleop is enabled. */
   @Override
-  public void teleopInit() {}
+  public void teleopInit() {
+
+  }
 
   /** This function is called periodically during operator control. */
   @Override
   public void teleopPeriodic() {
     //drives robot
+    //if (enableDrive){
     differentialDrive.arcadeDrive(limiter0.calculate(joystick.getX() * driveSpeed * 0.5), limiter1.calculate(joystick.getY() * driveSpeed));
+    //}
     //eventually will define what each word means, e.g limiter1 refers safety in limiting acceleration speed
     //moves arm up and down, fractions of a movement do not count to prevent drifting
     if (Math.abs(joystick2.getY()) <= 0.1)
@@ -246,6 +256,19 @@ public class Robot extends TimedRobot {
       armMotor1.set(-1*joystick2.getY());
       armMotor2.set(-1*joystick2.getY()); // output value == getY (joystick) and -1 because wiring
     }
+    //check if intake button pressed
+    if (joystick.getRawButton(1)) { // change to actual button, consider parameter about having the arm on the floor, also chnage to have button contunisly pushed
+      //enableDrive = false;
+      // if there is no note the intake motor runs
+      while (checkSensorandNotify() == true){
+      intakeMotor.set(0.5);
+
+      //once the note is in the intake the motor stops
+      if (checkSensorandNotify() == false) {
+      intakeMotor.set(0); }
+      //enableDrive = true;
+    }}
+
   }
 
   /** This function is called once when the robot is disabled. */

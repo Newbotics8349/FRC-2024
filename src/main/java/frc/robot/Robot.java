@@ -25,6 +25,7 @@ import frc.robot.AprilTagTracking.*;
 
 import java.util.Map;
 import java.util.Optional;
+import frc.robot.Arm;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo.None;
 import com.kauailabs.navx.frc.AHRS;
@@ -100,22 +101,15 @@ public class Robot extends TimedRobot {
   AprilTagTracker aprilTagTracker;
 
   private boolean isRed = false;
-  //proximity sensor to detect when note is in intake
-  private DigitalInput proximitySensor;
 
-  public boolean checkSensorandNotify() { // method to return whether a note is loaded or not
-    boolean noNoteDetected = proximitySensor.get(); // This will return true if nothing is detected 
+  public Arm arm; 
+  
+ 
+
+  
 //====================================================
 
-    // Assuming the sensor output is HIGH when an object is detected
-    if (noNoteDetected) { // When no note is detected, this if statement occurs
-        SmartDashboard.putString("Alert", "No note in the intake.");}
-    // turn LED colour
-    else{ // When note is detected, this else statement occurs
-        SmartDashboard.putString("Alert", "Note is in the intake!");}
-    return noNoteDetected; 
-      
-    }
+  
     /**
    * This function is run when the robot is first started up and should be used for any
    * initialization code.
@@ -135,14 +129,9 @@ public class Robot extends TimedRobot {
       isRed = false;
     }
 }
+
     aprilTagTracker = new AprilTagTracker("Arducam_OV9281_USB_Camera");
-
-    // Adding a text field widget to the default tab for the sensor message
-    proximitySensor = new DigitalInput(1); // Use the actual DIO port number
-    Shuffleboard.getTab("SmartDashboard")
-    .add("Sensor Message", "No object detected") // Initial message
-    .getEntry();
-
+    arm = new Arm();
     // Places a compass indicator for the gyro heading on the dashboard
     gyro = new AHRS(SerialPort.Port.kUSB);
     ShuffleboardTab compassTab = Shuffleboard.getTab("Compass");
@@ -196,7 +185,7 @@ public class Robot extends TimedRobot {
   public void robotPeriodic() {
     aprilTagTracker.UpdateTracker();
     //detects if there is a note in the intake
-    checkSensorandNotify();
+    arm.checkSensorandNotify();
     // Read the current yaw angle from the gyro
     double yawAngle = gyro.getYaw();
     // Convert the yaw angle to a 0-360 range for compass heading

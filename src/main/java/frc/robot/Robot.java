@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.apriltag.AprilTagDetection;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.networktables.NetworkTableEntry;
@@ -20,8 +21,10 @@ import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
+import frc.robot.AprilTagTracking.*;
 
 import java.util.Map;
+import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo.None;
 import com.kauailabs.navx.frc.AHRS;
@@ -31,6 +34,8 @@ import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.SerialPort;
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -79,14 +84,6 @@ public class Robot extends TimedRobot {
   private DifferentialDrive differentialDrive;
   private double driveSpeed = 1;
 
- //functional motors
-  private CANSparkMax armMotor1;
-  private CANSparkMax armMotor2; 
-  private CANSparkMax intakeMotor;
-  private CANSparkMax shooterMotor1;
-  private CANSparkMax shooterMotor2;
-  private double funcModifier = 1;
-
   //acceleration limiters
   private SlewRateLimiter limiter0;
   private SlewRateLimiter limiter1;
@@ -99,13 +96,15 @@ public class Robot extends TimedRobot {
   // disbales drive when needed
   private boolean enableDrive = true;
 
+  //april tag
+  AprilTagTracker aprilTagTracker;
+
+  private boolean isRed = false;
   //proximity sensor to detect when note is in intake
   private DigitalInput proximitySensor;
 
   public boolean checkSensorandNotify() { // method to return whether a note is loaded or not
     boolean noNoteDetected = proximitySensor.get(); // This will return true if nothing is detected 
-
-
 //====================================================
 
     // Assuming the sensor output is HIGH when an object is detected
@@ -121,12 +120,23 @@ public class Robot extends TimedRobot {
    * This function is run when the robot is first started up and should be used for any
    * initialization code.
    */
-
+ 
 //===================================================
 
   @Override
   public void robotInit() { // init == initiate == happens once and at the beginning
-    
+    //colour selection and actions
+  Optional<Alliance> ally = DriverStation.getAlliance();
+    if (ally.isPresent()) {
+    if (ally.get() == Alliance.Red) {
+      isRed = true;
+    }
+    if (ally.get() == Alliance.Blue) {
+      isRed = false;
+    }
+}
+    aprilTagTracker = new AprilTagTracker("Arducam_OV9281_USB_Camera");
+
     // Adding a text field widget to the default tab for the sensor message
     proximitySensor = new DigitalInput(1); // Use the actual DIO port number
     Shuffleboard.getTab("SmartDashboard")
@@ -171,12 +181,7 @@ public class Robot extends TimedRobot {
     m_chooser.addOption("My Auto", kCustomAuto);
     SmartDashboard.putData("Auto choices", m_chooser);
 
-    //functional motors
-    armMotor1 = new CANSparkMax(1, MotorType.kBrushless);
-    armMotor2 = new CANSparkMax(2, MotorType.kBrushless);
-    intakeMotor = new CANSparkMax(3, MotorType.kBrushless);
-    shooterMotor1 = new CANSparkMax(4, MotorType.kBrushless);
-    shooterMotor2 = new CANSparkMax(9, MotorType.kBrushless);
+
   
   }
 
@@ -189,6 +194,7 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void robotPeriodic() {
+    aprilTagTracker.UpdateTracker();
     //detects if there is a note in the intake
     checkSensorandNotify();
     // Read the current yaw angle from the gyro
@@ -197,7 +203,46 @@ public class Robot extends TimedRobot {
     double compassHeading = yawAngle < 0 ? 360 + yawAngle : yawAngle;
     // Update the Shuffleboard compass widget with the current heading
     gyroCompassEntry.setDouble(compassHeading);
-}
+    //aprilTags and actions
+    if ((isRed && aprilTagTracker.HasTargetWithId(4)) || (!isRed && aprilTagTracker.HasTargetWithId(7))) {
+      SmartDashboard.putString("AprilTag", "Middle shooter AprilTag detected");
+
+
+     }
+    else {
+      SmartDashboard.putString("AprilTag", "No AprilTag detected");
+    }
+    if ((isRed && aprilTagTracker.HasTargetWithId(3)) || (!isRed && aprilTagTracker.HasTargetWithId(8))) {
+
+    
+    }else{
+    }
+    if ((isRed && aprilTagTracker.HasTargetWithId(5)) || (!isRed && aprilTagTracker.HasTargetWithId(6))) {
+
+
+    
+    }else{
+    
+    }
+    if ((isRed && aprilTagTracker.HasTargetWithId(11)) || (!isRed && aprilTagTracker.HasTargetWithId(16))) {
+
+    
+    }else{
+  
+    }
+    if ((isRed && aprilTagTracker.HasTargetWithId(12)) || (!isRed && aprilTagTracker.HasTargetWithId(15))) {
+
+    
+    }else{
+    }
+
+    if ((isRed && aprilTagTracker.HasTargetWithId(13)) || (!isRed && aprilTagTracker.HasTargetWithId(14))) {
+
+    
+    }else{
+    }
+    }
+
    // periodic == happens like every milisecond
 
   /**
@@ -245,29 +290,17 @@ public class Robot extends TimedRobot {
     differentialDrive.arcadeDrive(limiter0.calculate(joystick.getX() * driveSpeed * 0.5), limiter1.calculate(joystick.getY() * driveSpeed));
     //}
     //eventually will define what each word means, e.g limiter1 refers safety in limiting acceleration speed
-    //moves arm up and down, fractions of a movement do not count to prevent drifting
     if (Math.abs(joystick2.getY()) <= 0.1)
     {
-      armMotor1.set(0);
-      armMotor2.set(0); //outputs changed to 0, results in no motor function
+   //   armMotor1.set(0);
+   //   armMotor2.set(0); //outputs changed to 0, results in no motor function
     }
     else
     {
-      armMotor1.set(-1*joystick2.getY());
-      armMotor2.set(-1*joystick2.getY()); // output value == getY (joystick) and -1 because wiring
+   //   armMotor1.set(-1*joystick2.getY());
+   //   armMotor2.set(-1*joystick2.getY()); // output value == getY (joystick) and -1 because wiring
     }
     //check if intake button pressed
-    if (joystick.getRawButton(1)) { // change to actual button, consider parameter about having the arm on the floor, also chnage to have button contunisly pushed
-      //enableDrive = false;
-      // if there is no note the intake motor runs
-      while (checkSensorandNotify() == true){
-      intakeMotor.set(0.5);
-
-      //once the note is in the intake the motor stops
-      if (checkSensorandNotify() == false) {
-      intakeMotor.set(0); }
-      //enableDrive = true;
-    }}
 
   }
 

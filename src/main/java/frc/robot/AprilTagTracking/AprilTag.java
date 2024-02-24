@@ -4,8 +4,8 @@ import org.photonvision.targeting.PhotonTrackedTarget;
 
 public class AprilTag {
     int id;
-    double yaw;
-    double pitch;
+    public double yaw;
+    public double pitch;
     double area;
     
     AprilTag(PhotonTrackedTarget target)

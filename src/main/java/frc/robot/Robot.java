@@ -94,29 +94,19 @@ public class Robot extends TimedRobot {
   // navX MXP using USB
   private AHRS gyro;
   private GenericEntry gyroCompassEntry;
-  // disbales drive when needed
-  private boolean enableDrive = true;
-
   //april tag
   AprilTagTracker aprilTagTracker;
-
+// for colour actions
   private boolean isRed = false;
 
+
+
   public Arm arm; 
-  
- 
 
-  
-//====================================================
-
-  
     /**
    * This function is run when the robot is first started up and should be used for any
    * initialization code.
    */
- 
-//===================================================
-
   @Override
   public void robotInit() { // init == initiate == happens once and at the beginning
     //colour selection and actions
@@ -195,16 +185,27 @@ public class Robot extends TimedRobot {
     //aprilTags and actions
     if ((isRed && aprilTagTracker.HasTargetWithId(4)) || (!isRed && aprilTagTracker.HasTargetWithId(7))) {
       SmartDashboard.putString("AprilTag", "Middle shooter AprilTag detected");
+      double yaw;
+      double pitch;
+      double AprilTagHeight = 132;
+      double cameraHeight = 0;
+      double distance;
+      if (isRed)  {
+        yaw = aprilTagTracker.GetTargetWithId(4).yaw;
+        pitch = aprilTagTracker.GetTargetWithId(4).pitch;
+
+      }
+      else {
+        yaw = aprilTagTracker.GetTargetWithId(7).yaw;
+        pitch = aprilTagTracker.GetTargetWithId(7).pitch;
+      }
+      distance = AprilTagHeight - cameraHeight / Math.tan(pitch);
+
 
 
      }
     else {
       SmartDashboard.putString("AprilTag", "No AprilTag detected");
-    }
-    if ((isRed && aprilTagTracker.HasTargetWithId(3)) || (!isRed && aprilTagTracker.HasTargetWithId(8))) {
-
-    
-    }else{
     }
     if ((isRed && aprilTagTracker.HasTargetWithId(5)) || (!isRed && aprilTagTracker.HasTargetWithId(6))) {
 
@@ -275,13 +276,12 @@ public class Robot extends TimedRobot {
   @Override
   public void teleopPeriodic() {
     //drives robot
-    //if (enableDrive){
     differentialDrive.arcadeDrive(limiter0.calculate(joystick.getX() * driveSpeed * 0.5), limiter1.calculate(joystick.getY() * driveSpeed));
     //}
     //eventually will define what each word means, e.g limiter1 refers safety in limiting acceleration speed
     if (Math.abs(joystick2.getY()) <= 0.1)
     {
-   //   armMotor1.set(0);
+   //  armMotor1.set(0);
    //   armMotor2.set(0); //outputs changed to 0, results in no motor function
     }
     else
@@ -289,8 +289,6 @@ public class Robot extends TimedRobot {
    //   armMotor1.set(-1*joystick2.getY());
    //   armMotor2.set(-1*joystick2.getY()); // output value == getY (joystick) and -1 because wiring
     }
-    //check if intake button pressed
-
   }
 
   /** This function is called once when the robot is disabled. */

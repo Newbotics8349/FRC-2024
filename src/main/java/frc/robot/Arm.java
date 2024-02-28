@@ -38,12 +38,12 @@ public class Arm {
   private CANSparkMax intakeMotor;
   private CANSparkMax shooterMotor1;
   private CANSparkMax shooterMotor2;
-  private double funcModifier = 1;
   public double ampPosition;
   private double angleToEncoderPosition;
   private final double starterAngle = 0;
   private DigitalInput proximitySensor;
-
+  public double maxArmAngle;
+  public double minArmAngle;
    
   
     Arm() {
@@ -54,11 +54,7 @@ public class Arm {
         shooterMotor1 = new CANSparkMax(4, MotorType.kBrushless);
         shooterMotor2 = new CANSparkMax(9, MotorType.kBrushless);
         proximitySensor = new DigitalInput(1); // Use the actual DIO port number
-        Shuffleboard.getTab("SmartDashboard")
-        .add("Sensor Message", "No object detected") // Initial message
-        .getEntry();
 
-    
     }
     public boolean checkSensorandNotify() { // method to return whether a note is loaded or not
         boolean noNoteDetected = proximitySensor.get(); // This will return true if nothing is detected 
@@ -107,10 +103,17 @@ public class Arm {
     }
 
     public void moveToPosition(double pos) {
+        if (pos > maxArmAngle) {
+            pos = maxArmAngle;
+        }
+        else if (pos < minArmAngle) {
+            pos = minArmAngle;
+        }
         double Kp = 0; // change to actual after testing*************
         double error = pos - getArmAngle(); // current position (after converting)*****
         double power = Kp * error;
         setMotorPower(power);
+
 
     }
 }

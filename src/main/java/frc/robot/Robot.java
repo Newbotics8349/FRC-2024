@@ -324,12 +324,49 @@ public class Robot extends TimedRobot {
               break;
             }
           }
+
           //lift up arm
           //shoot
           //lower arm
           //drive away
 
+          //pythagorian therererom, (height of speaker)^2 + (distance from speaker)^2 = (shoot angle)^2
+          //if velocity fast enough, parabolic arc becomes straight line
+          
+          //tanx = (height of speaker) / (distance from speaker)
+          //while (aprilTagTracker.GetTargetWithId(8).pitch != tanx)
+          //{
+            //if (aprilTagTracker.GetTargetWithId(8).pitch < tanx) // arm go up
+            ///{
+              //move arm angle
+              //gremgTheMotor.set(1) // figure out which is which
+              //gurgleTheMotor.set(-1)
+            ///}
+            ///else if (aprilTagTracker.GetTargetWithId(8).pitch > tanx) // arm go down
+            ///{
+              //move arm angle
+              //gremgTheMotor.set(-1) // figure out which is which
+              //gurgleTheMotor.set(1)
+            ///}
+          //}
 
+          //shoot
+          arm.shooter(0.7);
+          if (arm.checkSensorandNotify())
+          {
+            arm.shooter(0);
+          }
+
+          while (aprilTagTracker.GetTargetWithId(8).pitch != 0) //arm go down
+          {
+            //gremgTheMotor.set(-1) // figure out which is which
+            //gurgleTheMotor.set(1)
+          }
+
+          moveMotorID5.set(1); //LEFT SIDE GOING forward
+          //schmegTheMotor.set(1);
+          //nathanregTheMotor.set(-1); //RIGHT SIDE, GOING backward
+          //gregTheMotor.set(-1);
 
 
 
@@ -342,6 +379,43 @@ public class Robot extends TimedRobot {
         case redOneNoteAuto:
           //small cheese
           // 0. aim entire robot 1. arm up, 2. shoot, 3. arm down, 4. drive over line
+
+
+          while (gyro.getYaw() < 45)
+          {
+            //turn left
+            moveMotorID5.set(-1); //LEFT SIDE GOING backward
+            //schmegTheMotor.set(-1);
+            //nathanregTheMotor.set(1); //RIGHT SIDE, GOING forward
+            //gregTheMotor.set(1);
+          }
+          
+          while (isRed && aprilTagTracker.HasTargetWithId(3)) //KEEP MOVING WHEELS UNTIL getYaw == 0
+          {
+            if(aprilTagTracker.GetTargetWithId(3).yaw > 0)
+            {
+              moveMotorID5.set(1); //LEFT SIDE GOING forward
+              //schmegTheMotor.set(1);
+              //nathanregTheMotor.set(-1); //RIGHT SIDE, GOING backward
+              //gregTheMotor.set(-1);
+            }
+            else if (aprilTagTracker.GetTargetWithId(3).yaw < 0)
+            {
+              moveMotorID5.set(-1); //LEFT SIDE GOING backward
+              //schmegTheMotor.set(-1);
+              //nathanregTheMotor.set(1); //RIGHT SIDE, GOING forward
+              //gregTheMotor.set(1);
+            }
+            else
+            {
+              break;
+            }
+          }
+          
+          //lift up arm
+          //shoot
+          //lower arm
+          //drive away
           break;
 
         case kDefaultAuto:

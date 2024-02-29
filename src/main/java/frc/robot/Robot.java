@@ -109,19 +109,39 @@ public class Robot extends TimedRobot {
 // for colour actions
   public AprilTagTracker aprilTagTracker;
   private boolean isRed = false;
-
-
-
   public Arm arm; 
   public boolean autonomousOff = true;
-  
   public double yawAngle;
+  public double minAngle;
+  public double maxAngle;
     /**
    * This function is run when the robot is first started up and should be used for any
    * initialization code.
    */
+  //determines shooting angle from distance obtained from Apriltag and shooting speed
+  public double projectileAngle(double distance, double Vi) {
+
+    for (double i = 40; i < 90; i+=0.1) {
+      double y = distance * Math.tan(Math.toRadians(i)) + 4.905 * Math.pow(distance, 2)/Math.pow(Vi, 2)/Math.pow(Math.cos(Math.toRadians(i)), 2);
+      if (y > 1.98) {
+        minAngle = i;
+        break;
+      }
+    }
+
+    for (double i = 90; i >= 40; i-=0.1) {
+      double y = distance * Math.tan(Math.toRadians(i)) + 4.905 * Math.pow(distance, 2)/Math.pow(Vi, 2)/Math.pow(Math.cos(Math.toRadians(i)), 2);
+      if (y < 2.11) {
+        maxAngle = i;
+        break;
+      }
+    }
+
+    return (minAngle + maxAngle)/2;      //Returns the average value, needs testing
+  }
+
   @Override
-  public void robotInit() { // init == initiate == happens once and at the beginning
+  public void robotInit() { // init == initiate == happens once an/d at the beginning
     //colour selection and actions
   Optional<Alliance> ally = DriverStation.getAlliance();
     if (ally.isPresent()) {
@@ -218,6 +238,7 @@ public class Robot extends TimedRobot {
         pitch = aprilTagTracker.GetTargetWithId(7).pitch;
       }
       distance = AprilTagHeight - cameraHeight / Math.tan(pitch);
+      arm.moveToPosition(projectileAngle(distance, 6.0)); //need initial velocity
 
 
 

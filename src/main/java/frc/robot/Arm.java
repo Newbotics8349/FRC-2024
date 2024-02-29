@@ -33,8 +33,8 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 
 public class Arm {
      //functional motors
-  private CANSparkMax armMotor1;
-  private CANSparkMax armMotor2; 
+  public CANSparkMax armMotor1;
+  public CANSparkMax armMotor2; 
   private CANSparkMax intakeMotor;
   private CANSparkMax shooterMotor1;
   private CANSparkMax shooterMotor2;

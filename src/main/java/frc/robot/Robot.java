@@ -384,13 +384,13 @@ public class Robot extends TimedRobot {
       //eventually will define what each word means, e.g limiter1 refers safety in limiting acceleration speed
       if (Math.abs(joystick2.getY()) <= 0.1)
       {
-        //armMotor1.set(0);
-    //   armMotor2.set(0); //outputs changed to 0, results in no motor function
+        arm.armMotor1.set(0);
+        arm.armMotor2.set(0); //outputs changed to 0, results in no motor function
       }
       else
       {
-    //   armMotor1.set(-1*joystick2.getY());
-    //   armMotor2.set(-1*joystick2.getY()); // output value == getY (joystick) and -1 because wiring
+        arm.armMotor1.set(-1*joystick2.getY());
+        arm.armMotor2.set(-1*joystick2.getY()); // output value == getY (joystick) and -1 because wiring
       }
       //check if intake button pressed
 

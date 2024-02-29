@@ -384,7 +384,7 @@ public class Robot extends TimedRobot {
       //eventually will define what each word means, e.g limiter1 refers safety in limiting acceleration speed
       if (Math.abs(joystick2.getY()) <= 0.1)
       {
-    //   armMotor1.set(0);
+        //armMotor1.set(0);
     //   armMotor2.set(0); //outputs changed to 0, results in no motor function
       }
       else
@@ -405,11 +405,11 @@ public class Robot extends TimedRobot {
         arm.moveToPosition(pos-10);
       }
 
-      if (intakeBtn == 1)
+      if (joystick.getRawButton(7))
       {
         arm.intake(0.7); //get actual power variable
       }
-      if (shootBtn == 1)
+      if (joystick.getRawButton(8))
       {
         arm.shooter(0.7); //^^^
       }

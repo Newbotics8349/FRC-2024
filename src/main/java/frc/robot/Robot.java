@@ -106,26 +106,16 @@ public class Robot extends TimedRobot {
   private AHRS gyro;
   private GenericEntry gyroCompassEntry;
   //april tag
-<<<<<<< HEAD
-  AprilTagTracker aprilTagTracker;
 // for colour actions
-=======
   public AprilTagTracker aprilTagTracker;
-
->>>>>>> ebc3da8ea69a606c2df49f1ec3855efa2ffd6459
   private boolean isRed = false;
 
 
 
   public Arm arm; 
-<<<<<<< HEAD
-=======
-
   public boolean autonomousOff = true;
   
   public double yawAngle;
->>>>>>> ebc3da8ea69a606c2df49f1ec3855efa2ffd6459
-
     /**
    * This function is run when the robot is first started up and should be used for any
    * initialization code.
@@ -371,7 +361,6 @@ public class Robot extends TimedRobot {
   /** This function is called periodically during operator control. */
   @Override
   public void teleopPeriodic() {
-<<<<<<< HEAD
     //drives robot
     differentialDrive.arcadeDrive(limiter0.calculate(joystick.getX() * driveSpeed * 0.5), limiter1.calculate(joystick.getY() * driveSpeed));
     //}
@@ -385,7 +374,6 @@ public class Robot extends TimedRobot {
     {
    //   armMotor1.set(-1*joystick2.getY());
    //   armMotor2.set(-1*joystick2.getY()); // output value == getY (joystick) and -1 because wiring
-=======
     if (autonomousOff == true)
     {
       double pos = arm.getArmAngle();
@@ -426,9 +414,9 @@ public class Robot extends TimedRobot {
         arm.shooter(0.7); //^^^
       }
       
->>>>>>> ebc3da8ea69a606c2df49f1ec3855efa2ffd6459
     }
   }
+}
 
   /** This function is called once when the robot is disabled. */
   @Override

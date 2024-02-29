@@ -46,7 +46,7 @@ public class Arm {
   public double minArmAngle;
    
   
-    Arm() {
+    public Arm() {
         //functional motors
         armMotor1 = new CANSparkMax(1, MotorType.kBrushless);
         armMotor2 = new CANSparkMax(2, MotorType.kBrushless);
@@ -102,15 +102,15 @@ public class Arm {
         armMotor2.set(power);
     }
 
-    public void moveToPosition(double pos) {
-        if (pos > maxArmAngle) {
-            pos = maxArmAngle;
+    public void moveToPosition(double angle) {
+        if (angle > maxArmAngle) {
+            angle = maxArmAngle;
         }
-        else if (pos < minArmAngle) {
-            pos = minArmAngle;
+        else if (angle < minArmAngle) {
+            angle = minArmAngle;
         }
         double Kp = 0; // change to actual after testing*************
-        double error = pos - getArmAngle(); // current position (after converting)*****
+        double error = angle - getArmAngle(); // current position (after converting)*****
         double power = Kp * error;
         setMotorPower(power);
 

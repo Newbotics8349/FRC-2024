@@ -25,6 +25,9 @@ import frc.robot.AprilTagTracking.*;
 
 import java.util.Map;
 import java.util.Optional;
+
+import javax.lang.model.util.ElementScanner14;
+
 import frc.robot.Arm;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo.None;
@@ -47,12 +50,16 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 public class Robot extends TimedRobot {
   private static final String kDefaultAuto = "Default";
   private static final String kCustomAuto = "My Auto";
+  private static final String blueMiddleAuto = "Blue Middle Auto";
+  private static final String redMiddleAuto = "Red Middle Auto";
+  private static final String redOneNoteAuto = "Red One Note Auto";
+  private static final String blueOneNoteAuto = "Blue One Note Auto";
   private String m_autoSelected;
   private final SendableChooser<String> m_chooser = new SendableChooser<>();
 
     // controls
-  private Joystick joystick; //joystick
-  private Joystick joystick2; //joystick2
+  private Joystick joystick; //joystick used for DRIVING
+  private Joystick joystick2; //joystick2 
 
   //accelerometer
   private BuiltInAccelerometer builtInAccelerometer;
@@ -67,9 +74,13 @@ public class Robot extends TimedRobot {
   final int driveReverseBtn = 1;
 
   // functional button mapping
-  final int funcReverseBtn = 1;
-  final int openGripper = 5;
-  final int closeGripper = 6;
+  //final int funcReverseBtn = 1;
+  //final int openGripper = 5;
+  //final int closeGripper = 6;
+  //final int buttonArmUp = 2;
+  //final int buttonArmDown = 3;
+  final int intakeBtn = 7;
+  final int shootBtn = 8;
   //final int func1Btn = 1;
   //final int func2Btn = 2;
   //final int func3Btn = 3;
@@ -95,13 +106,25 @@ public class Robot extends TimedRobot {
   private AHRS gyro;
   private GenericEntry gyroCompassEntry;
   //april tag
+<<<<<<< HEAD
   AprilTagTracker aprilTagTracker;
 // for colour actions
+=======
+  public AprilTagTracker aprilTagTracker;
+
+>>>>>>> ebc3da8ea69a606c2df49f1ec3855efa2ffd6459
   private boolean isRed = false;
 
 
 
   public Arm arm; 
+<<<<<<< HEAD
+=======
+
+  public boolean autonomousOff = true;
+  
+  public double yawAngle;
+>>>>>>> ebc3da8ea69a606c2df49f1ec3855efa2ffd6459
 
     /**
    * This function is run when the robot is first started up and should be used for any
@@ -132,7 +155,11 @@ public class Robot extends TimedRobot {
     limiter0 = new SlewRateLimiter(2); //x-axis drive
     limiter1 = new SlewRateLimiter(1.5); //y-axis drive
     m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
-    m_chooser.addOption("My Auto", kCustomAuto);
+    m_chooser.addOption("My Auto", blueMiddleAuto); // Blue, Big Cheese
+    m_chooser.addOption("My Auto", redMiddleAuto); // Red, Big Cheese
+    m_chooser.addOption("My Auto", redOneNoteAuto); // Red, small cheese
+    m_chooser.addOption("My Auto", blueOneNoteAuto); // Blue, small cheese
+    m_chooser.addOption("My Auto", kCustomAuto); // test/temporary
     SmartDashboard.putData("Auto choices", m_chooser);
 
     // Initialize joystick object
@@ -177,12 +204,13 @@ public class Robot extends TimedRobot {
     //detects if there is a note in the intake
     arm.checkSensorandNotify();
     // Read the current yaw angle from the gyro
-    double yawAngle = gyro.getYaw();
+    yawAngle = gyro.getYaw();
     // Convert the yaw angle to a 0-360 range for compass heading
     double compassHeading = yawAngle < 0 ? 360 + yawAngle : yawAngle;
     // Update the Shuffleboard compass widget with the current heading
     gyroCompassEntry.setDouble(compassHeading);
     //aprilTags and actions
+    //MAKE ONLY HAPPEN WHEN BUTTON PUSHED!!!
     if ((isRed && aprilTagTracker.HasTargetWithId(4)) || (!isRed && aprilTagTracker.HasTargetWithId(7))) {
       SmartDashboard.putString("AprilTag", "Middle shooter AprilTag detected");
       double yaw;
@@ -250,19 +278,87 @@ public class Robot extends TimedRobot {
     m_autoSelected = m_chooser.getSelected();
     // m_autoSelected = SmartDashboard.getString("Auto Selector", kDefaultAuto);
     System.out.println("Auto selected: " + m_autoSelected);
+    autonomousOff = false;
+
+
+
   }
 
   /** This function is called periodically during autonomous. */
   @Override
   public void autonomousPeriodic() {
-    switch (m_autoSelected) {
-      case kCustomAuto:
-        // Put custom auto code here
-        break;
-      case kDefaultAuto:
-      default:
-        // Put default auto code here
-        break;
+    if (autonomousOff == false)
+    {
+      switch (m_autoSelected) {
+        case kCustomAuto:
+          // Put custom auto code here
+          break;
+        case blueMiddleAuto:
+          //code here
+          //lift arm
+          //get required angle of arm, either april tag or hard coded
+          break;
+
+        case blueOneNoteAuto:
+          //small cheese
+          // 0. aim entire robot 1. arm up, 2. shoot, 3. arm down, 4. drive over line
+
+
+          while (gyro.getYaw() < 45)
+          {
+            //turn right
+            moveMotorID5.set(1); //LEFT SIDE GOING FORWARD
+            //schmegTheMotor.set(1);
+            //nathanregTheMotor.set(-1); //RIGHT SIDE, GOING BACK
+            //gregTheMotor.set(-1);
+          }
+          
+          while (!isRed && aprilTagTracker.HasTargetWithId(8)) //KEEP MOVING WHEELS UNTIL getYaw == 0
+          {
+            if(aprilTagTracker.GetTargetWithId(8).yaw > 0)
+            {
+              moveMotorID5.set(-1); //LEFT SIDE GOING backward
+              //schmegTheMotor.set(-1);
+              //nathanregTheMotor.set(1); //RIGHT SIDE, GOING forward
+              //gregTheMotor.set(1);
+            }
+            else if (aprilTagTracker.GetTargetWithId(8).yaw < 0)
+            {
+              moveMotorID5.set(1); //LEFT SIDE GOING FORWARD
+              //schmegTheMotor.set(1);
+              //nathanregTheMotor.set(-1); //RIGHT SIDE, GOING BACK
+              //gregTheMotor.set(-1);
+            }
+            else
+            {
+              break;
+            }
+          }
+          //lift up arm
+          //shoot
+          //lower arm
+          //drive away
+
+
+
+
+
+          break;
+
+        case redMiddleAuto:
+          //code here
+          break;
+
+        case redOneNoteAuto:
+          //small cheese
+          // 0. aim entire robot 1. arm up, 2. shoot, 3. arm down, 4. drive over line
+          break;
+
+        case kDefaultAuto:
+        default:
+          // Put default auto code here
+          break;
+      }
     }
   }
 
@@ -275,6 +371,7 @@ public class Robot extends TimedRobot {
   /** This function is called periodically during operator control. */
   @Override
   public void teleopPeriodic() {
+<<<<<<< HEAD
     //drives robot
     differentialDrive.arcadeDrive(limiter0.calculate(joystick.getX() * driveSpeed * 0.5), limiter1.calculate(joystick.getY() * driveSpeed));
     //}
@@ -288,6 +385,48 @@ public class Robot extends TimedRobot {
     {
    //   armMotor1.set(-1*joystick2.getY());
    //   armMotor2.set(-1*joystick2.getY()); // output value == getY (joystick) and -1 because wiring
+=======
+    if (autonomousOff == true)
+    {
+      double pos = arm.getArmAngle();
+      //drives robot
+      //if (enableDrive){
+      differentialDrive.arcadeDrive(limiter0.calculate(joystick.getX() * driveSpeed * 0.5), limiter1.calculate(joystick.getY() * driveSpeed));
+      //}
+      //eventually will define what each word means, e.g limiter1 refers safety in limiting acceleration speed
+      if (Math.abs(joystick2.getY()) <= 0.1)
+      {
+    //   armMotor1.set(0);
+    //   armMotor2.set(0); //outputs changed to 0, results in no motor function
+      }
+      else
+      {
+    //   armMotor1.set(-1*joystick2.getY());
+    //   armMotor2.set(-1*joystick2.getY()); // output value == getY (joystick) and -1 because wiring
+      }
+      //check if intake button pressed
+
+      //if joystick up, pos += a;
+
+      if (joystick2.getY() > 0 && pos < 90) // check to see if works
+      {
+        arm.moveToPosition(pos+10);
+      }
+      else if (joystick2.getY() < 0 && pos > 0)
+      {
+        arm.moveToPosition(pos-10);
+      }
+
+      if (intakeBtn == 1)
+      {
+        arm.intake(0.7); //get actual power variable
+      }
+      if (shootBtn == 1)
+      {
+        arm.shooter(0.7); //^^^
+      }
+      
+>>>>>>> ebc3da8ea69a606c2df49f1ec3855efa2ffd6459
     }
   }
 

@@ -248,30 +248,6 @@ public class Robot extends TimedRobot {
     else {
       SmartDashboard.putString("AprilTag", "No AprilTag detected");
     }
-    if ((isRed && aprilTagTracker.HasTargetWithId(5)) || (!isRed && aprilTagTracker.HasTargetWithId(6))) {
-
-
-    
-    }else{
-    
-    }
-    if ((isRed && aprilTagTracker.HasTargetWithId(11)) || (!isRed && aprilTagTracker.HasTargetWithId(16))) {
-
-    
-    }else{
-  
-    }
-    if ((isRed && aprilTagTracker.HasTargetWithId(12)) || (!isRed && aprilTagTracker.HasTargetWithId(15))) {
-
-    
-    }else{
-    }
-
-    if ((isRed && aprilTagTracker.HasTargetWithId(13)) || (!isRed && aprilTagTracker.HasTargetWithId(14))) {
-
-    
-    }else{
-    }
     }
 
    // periodic == happens like every milisecond

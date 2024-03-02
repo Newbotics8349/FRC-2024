@@ -243,7 +243,9 @@ public class Robot extends TimedRobot {
         pitch = aprilTagTracker.GetTargetWithId(7).pitch;
       }
       distance = AprilTagHeight - cameraHeight / Math.tan(pitch);
-      arm.moveToPosition(projectileAngle(distance, 6.0)); //need initial velocity
+      arm.prepareToShoot(0.75);
+      
+      arm.moveToPosition(projectileAngle(distance, arm.calculateShooterSpeed())); //need initial velocity
      }
     else {
       SmartDashboard.putString("AprilTag", "No AprilTag detected");

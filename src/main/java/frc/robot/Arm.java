@@ -76,10 +76,12 @@ public class Arm {
   }
   // shooter
   public void shooter(double power) {
-    intakeMotor.set(power);
+    //intakeMotor.set(power);
     shooterMotor1.set(power);
     shooterMotor2.set(power);
-      //eventually reset motors to zero
+
+    
+    intakeMotor.set(power);
   }
   // intake
   public void intake(double power) {

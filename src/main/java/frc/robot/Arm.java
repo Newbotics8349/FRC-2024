@@ -20,6 +20,7 @@ import frc.robot.AprilTagTracking.*;
 import java.util.Map;
 import java.util.Optional;
 
+import com.ctre.phoenix.motorcontrol.can.VictorSPX;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.None;
 import com.kauailabs.navx.frc.AHRS;
 import com.revrobotics.CANSparkMax;
@@ -30,6 +31,7 @@ import edu.wpi.first.wpilibj.SerialPort;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+
 
 public class Arm {
      //functional motors
@@ -48,11 +50,11 @@ public class Arm {
   
     public Arm() {
         //functional motors
-        armMotor1 = new CANSparkMax(1, MotorType.kBrushless);
-        armMotor2 = new CANSparkMax(2, MotorType.kBrushless);
-        intakeMotor = new CANSparkMax(3, MotorType.kBrushless);
-        shooterMotor1 = new CANSparkMax(4, MotorType.kBrushless);
-        shooterMotor2 = new CANSparkMax(9, MotorType.kBrushless);
+        armMotor1 = new CANSparkMax(1, MotorType.kBrushless); // left arm base
+        armMotor2 = new CANSparkMax(2, MotorType.kBrushless); //right arm base
+        intakeMotor = new CANSparkMax(3, MotorType.kBrushed); // pwm set
+        shooterMotor1 = new CANSparkMax(4, MotorType.kBrushless); //left shooter
+        shooterMotor2 = new CANSparkMax(9, MotorType.kBrushless); // right shooter
         proximitySensor = new DigitalInput(1); // Use the actual DIO port number
 
     }
@@ -74,9 +76,9 @@ public class Arm {
   }
   // shooter
   public void shooter(double power) {
-      intakeMotor.set(power);
-      shooterMotor1.set(power);
-      shooterMotor2.set(power);
+    intakeMotor.set(power);
+    shooterMotor1.set(power);
+    shooterMotor2.set(power);
       //eventually reset motors to zero
   }
   // intake

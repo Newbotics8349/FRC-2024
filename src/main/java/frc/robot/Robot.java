@@ -321,27 +321,27 @@ public class Robot extends TimedRobot {
           while (gyro.getYaw() < 45)
           {
             //turn right
-            moveMotorID5.set(1); //LEFT SIDE GOING FORWARD
-            //schmegTheMotor.set(1);
-            //nathanregTheMotor.set(-1); //RIGHT SIDE, GOING BACK
-            //gregTheMotor.set(-1);
+            moveMotorID6.set(1); //LEFT SIDE GOING FORWARD
+            moveMotorID8.set(1);
+            moveMotorID5.set(-1); //RIGHT SIDE, GOING BACK
+            moveMotorID7.set(-1);
           }
           
           while (!isRed && aprilTagTracker.HasTargetWithId(8)) //KEEP MOVING WHEELS UNTIL getYaw == 0
           {
             if(aprilTagTracker.GetTargetWithId(8).yaw > 0)
             {
-              moveMotorID5.set(-1); //LEFT SIDE GOING backward
-              //schmegTheMotor.set(-1);
-              //nathanregTheMotor.set(1); //RIGHT SIDE, GOING forward
-              //gregTheMotor.set(1);
+              moveMotorID6.set(-1); //LEFT SIDE GOING backward
+              moveMotorID8.set(-1);
+              moveMotorID5.set(1); //RIGHT SIDE, GOING forward
+              moveMotorID7.set(1);
             }
             else if (aprilTagTracker.GetTargetWithId(8).yaw < 0)
             {
-              moveMotorID5.set(1); //LEFT SIDE GOING FORWARD
-              //schmegTheMotor.set(1);
-              //nathanregTheMotor.set(-1); //RIGHT SIDE, GOING BACK
-              //gregTheMotor.set(-1);
+              moveMotorID6.set(1); //LEFT SIDE GOING FORWARD
+              moveMotorID8.set(1);
+              moveMotorID5.set(-1); //RIGHT SIDE, GOING BACK
+              moveMotorID7.set(-1);
             }
             else
             {

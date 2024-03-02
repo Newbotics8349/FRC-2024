@@ -95,6 +95,8 @@ public class Robot extends TimedRobot {
   private MotorControllerGroup leftMoveMotors;
   private DifferentialDrive differentialDrive;
   private double driveSpeed = 1;
+  private CANSparkMax climberMotor1;
+  private CANSparkMax climberMotor2;
 
   //acceleration limiters
   private SlewRateLimiter limiter0;
@@ -185,6 +187,9 @@ public class Robot extends TimedRobot {
     moveMotorID6 = new CANSparkMax(6, MotorType.kBrushless); // NEO motor with CAN ID 6, left side
     moveMotorID7 = new CANSparkMax(7, MotorType.kBrushless); // NEo motor with CAN ID 7, right side
     moveMotorID8 = new CANSparkMax(8, MotorType.kBrushless); // NEO motor with CAN ID 8, left side
+    // climber motor initialization
+    climberMotor1 = new CANSparkMax(10, MotorType.kBrushed);
+    climberMotor2 = new CANSparkMax(11, MotorType.kBrushed);
 
     // Fix wiring inversion
     moveMotorID7.setInverted(true); // wiring thing, motor is flipped, bad wiring
@@ -242,9 +247,6 @@ public class Robot extends TimedRobot {
       }
       distance = AprilTagHeight - cameraHeight / Math.tan(pitch);
       arm.moveToPosition(projectileAngle(distance, 6.0)); //need initial velocity
-
-
-
      }
     else {
       SmartDashboard.putString("AprilTag", "No AprilTag detected");
@@ -517,7 +519,17 @@ public class Robot extends TimedRobot {
       {
         arm.shooter(0.7); //^^^
       }
-      
+      //climber
+      if(joystick.getRawButton(2)) 
+      {
+        climberMotor1.set(0.5);
+        climberMotor2.set(0.5);
+      }
+      else
+      {
+        climberMotor1.set(0);
+        climberMotor2.set(0);
+      }
     }
   }
 }

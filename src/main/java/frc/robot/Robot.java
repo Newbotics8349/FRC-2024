@@ -116,6 +116,8 @@ public class Robot extends TimedRobot {
   public double yawAngle;
   public double minAngle;
   public double maxAngle;
+
+  public double autoAngle;
     /**
    * This function is run when the robot is first started up and should be used for any
    * initialization code.
@@ -138,6 +140,7 @@ public class Robot extends TimedRobot {
         break;
       }
     }
+    autoAngle = (maxAngle + minAngle) / 2;
 
     return (minAngle + maxAngle)/2;      //Returns the average value, needs testing
   }
@@ -167,11 +170,11 @@ public class Robot extends TimedRobot {
     limiter0 = new SlewRateLimiter(2); //x-axis drive
     limiter1 = new SlewRateLimiter(1.5); //y-axis drive
     m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
-    m_chooser.addOption("My Auto", blueMiddleAuto); // Blue, Big Cheese
-    m_chooser.addOption("My Auto", redMiddleAuto); // Red, Big Cheese
-    m_chooser.addOption("My Auto", redOneNoteAuto); // Red, small cheese
-    m_chooser.addOption("My Auto", blueOneNoteAuto); // Blue, small cheese
-    m_chooser.addOption("My Auto", kCustomAuto); // test/temporary
+    m_chooser.addOption("blueMiddleAuto", blueMiddleAuto); // Blue, Big Cheese
+    m_chooser.addOption("redMiddleAuto", redMiddleAuto); // Red, Big Cheese
+    m_chooser.addOption("redOneNoteAuto", redOneNoteAuto); // Red, small cheese
+    m_chooser.addOption("blueOneNoteAuto", blueOneNoteAuto); // Blue, small cheese
+    m_chooser.addOption("kCustomAuto", kCustomAuto); // test/temporary
     SmartDashboard.putData("Auto choices", m_chooser);
 
     // Initialize joystick object
@@ -357,21 +360,21 @@ public class Robot extends TimedRobot {
           //if velocity fast enough, parabolic arc becomes straight line
           
           //tanx = (height of speaker) / (distance from speaker)
-          //while (aprilTagTracker.GetTargetWithId(8).pitch != tanx)
-          //{
-            //if (aprilTagTracker.GetTargetWithId(8).pitch < tanx) // arm go up
-            ///{
+          while (aprilTagTracker.GetTargetWithId(8).pitch != autoAngle + 10)
+          {
+            if (aprilTagTracker.GetTargetWithId(8).pitch < autoAngle + 10) // arm go up
+            {
               //move arm angle
               //gremgTheMotor.set(1) // figure out which is which
               //gurgleTheMotor.set(-1)
-            ///}
-            ///else if (aprilTagTracker.GetTargetWithId(8).pitch > tanx) // arm go down
-            ///{
+            }
+            else if (aprilTagTracker.GetTargetWithId(8).pitch > autoAngle + 10) // arm go down
+            {
               //move arm angle
               //gremgTheMotor.set(-1) // figure out which is which
               //gurgleTheMotor.set(1)
-            ///}
-          //}
+            }
+          }
 
           //shoot
           arm.shooter(0.7);

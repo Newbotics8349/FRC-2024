@@ -317,16 +317,18 @@ public class Robot extends TimedRobot {
           //small cheese
           // 0. aim entire robot 1. arm up, 2. shoot, 3. arm down, 4. drive over line
 
-
+          /* robot can start anywhere
           while (gyro.getYaw() < 45)
           {
             //turn right
-            moveMotorID6.set(1); //LEFT SIDE GOING FORWARD
-            moveMotorID8.set(1);
-            moveMotorID5.set(-1); //RIGHT SIDE, GOING BACK
-            moveMotorID7.set(-1);
+            //moveMotorID6.set(1); //LEFT SIDE GOING FORWARD
+            //moveMotorID8.set(1);
+            //moveMotorID5.set(-1); //RIGHT SIDE, GOING BACK
+            //moveMotorID7.set(-1);
           }
+          */
           
+          /*
           while (!isRed && aprilTagTracker.HasTargetWithId(8)) //KEEP MOVING WHEELS UNTIL getYaw == 0
           {
             if(aprilTagTracker.GetTargetWithId(8).yaw > 0)
@@ -348,7 +350,11 @@ public class Robot extends TimedRobot {
               break;
             }
           }
-
+          moveMotorID6.set(0); //stop
+          moveMotorID8.set(0);
+          moveMotorID5.set(0); //stop
+          moveMotorID7.set(0);
+          */
           //lift up arm
           //shoot
           //lower arm

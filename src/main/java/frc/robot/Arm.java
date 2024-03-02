@@ -46,6 +46,8 @@ public class Arm {
   private DigitalInput proximitySensor;
   public double maxArmAngle;
   public double minArmAngle;
+  public double lastCheckingSpeed = 0;
+  public double lastEncoderValue = 0;
    
   
     public Arm() {
@@ -83,6 +85,29 @@ public class Arm {
     
     intakeMotor.set(power);
   }
+  public double calculateShooterSpeed() {
+    Timer.getFPGATimestamp();
+    double currentTime = Timer.getFPGATimestamp();
+    double currentEncoder = shooterMotor1.getEncoder().getPosition();
+    double rangeTime = currentTime - lastCheckingSpeed;
+    if (rangeTime > 0.25) {
+        lastCheckingSpeed = currentTime;
+        lastEncoderValue = currentEncoder;
+        return 0;
+    }
+    double rangeEncoder = currentEncoder - lastEncoderValue;
+    double distancePerTick = Math.PI*5.08/21;
+    double velocity = rangeEncoder * distancePerTick / rangeTime;
+    lastCheckingSpeed = currentTime;
+    lastEncoderValue = currentEncoder;
+    return velocity;
+  }
+  
+  public void prepareToShoot(double power) {
+    shooterMotor1.set(power);
+    shooterMotor2.set(power);
+  }
+
   // intake
   public void intake(double power) {
     //enableDrive = false;

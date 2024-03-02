@@ -59,7 +59,6 @@ public class Robot extends TimedRobot {
 
     // controls
   private Joystick joystick; //joystick used for DRIVING
-  private Joystick joystick2; //joystick2 
 
   //accelerometer
   private BuiltInAccelerometer builtInAccelerometer;
@@ -179,8 +178,6 @@ public class Robot extends TimedRobot {
 
     // Initialize joystick object
     joystick = new Joystick(0); // Controller in port 0
-    joystick2 = new Joystick(1); // Controller in port 1
-
 
     // Drive motor object initialization
     moveMotorID5 = new CANSparkMax(5, MotorType.kBrushless); // NEO motor with CAN ID 5, right side
@@ -465,7 +462,7 @@ public class Robot extends TimedRobot {
     differentialDrive.arcadeDrive(limiter0.calculate(joystick.getX() * driveSpeed * 0.5), limiter1.calculate(joystick.getY() * driveSpeed));
     //}
     //eventually will define what each word means, e.g limiter1 refers safety in limiting acceleration speed
-    if (Math.abs(joystick2.getY()) <= 0.1)
+    if (Math.abs(joystick.getY()) <= 0.1)
     {
    //  armMotor1.set(0);
    //   armMotor2.set(0); //outputs changed to 0, results in no motor function
@@ -482,25 +479,25 @@ public class Robot extends TimedRobot {
       differentialDrive.arcadeDrive(limiter0.calculate(joystick.getX() * driveSpeed * 0.5), limiter1.calculate(joystick.getY() * driveSpeed));
       //}
       //eventually will define what each word means, e.g limiter1 refers safety in limiting acceleration speed
-      if (Math.abs(joystick2.getY()) <= 0.1)
+      if (Math.abs(joystick.getY()) <= 0.1)
       {
         arm.armMotor1.set(0);
         arm.armMotor2.set(0); //outputs changed to 0, results in no motor function
       }
       else
       {
-        arm.armMotor1.set(-1*joystick2.getY());
-        arm.armMotor2.set(-1*joystick2.getY()); // output value == getY (joystick) and -1 because wiring
+        arm.armMotor1.set(-1*joystick.getY());
+        arm.armMotor2.set(-1*joystick.getY()); // output value == getY (joystick) and -1 because wiring
       }
       //check if intake button pressed
 
       //if joystick up, pos += a;
 
-      if (joystick2.getY() > 0 && pos < 90) // check to see if works
+      if (joystick.getY() > 0 && pos < 90) // check to see if works
       {
         arm.moveToPosition(pos+10);
       }
-      else if (joystick2.getY() < 0 && pos > 0)
+      else if (joystick.getY() < 0 && pos > 0)
       {
         arm.moveToPosition(pos-10);
       }
@@ -514,15 +511,10 @@ public class Robot extends TimedRobot {
         arm.shooter(0.7); //^^^
       }
       //climber
-      if(joystick.getRawButton(2)) 
+      if(joystick.getZ() >= 0.1)
       {
-        climberMotor1.set(0.5);
-        climberMotor2.set(0.5);
-      }
-      else
-      {
-        climberMotor1.set(0);
-        climberMotor2.set(0);
+        climberMotor1.set(-1*joystick.getZ());
+        climberMotor2.set(-1*joystick.getZ());
       }
     }
   }

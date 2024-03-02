@@ -496,7 +496,7 @@ public class Robot extends TimedRobot {
       if (joystick.getRawButton(3))
       {
         climberMotor1.set(0.5);
-        clmiberMotor2.set(0.5);
+        climberMotor2.set(0.5);
       }
       if (joystick.getRawButton(4))
       {

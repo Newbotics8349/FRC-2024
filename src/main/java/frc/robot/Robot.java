@@ -33,7 +33,7 @@ import frc.robot.Arm;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.None;
 import com.kauailabs.navx.frc.AHRS;
 import com.revrobotics.CANSparkMax;
-import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+import com.revrobotics.CANSparkLowLevel.MotorType;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.SerialPort;
@@ -42,569 +42,583 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 
 /**
- * The VM is configured to automatically run this class, and to call the functions corresponding to
- * each mode, as described in the TimedRobot documentation. If you change the name of this class or
- * the package after creating this project, you must also update the build.gradle file in the
+ * The VM is configured to automatically run this class, and to call the
+ * functions corresponding to
+ * each mode, as described in the TimedRobot documentation. If you change the
+ * name of this class or
+ * the package after creating this project, you must also update the
+ * build.gradle file in the
  * project.
  */
 public class Robot extends TimedRobot {
-  private static final String kDefaultAuto = "Default";
-  private static final String kCustomAuto = "My Auto";
-  //private static final String blueMiddleAuto = "Blue Middle Auto";
-  //private static final String redMiddleAuto = "Red Middle Auto";
-  //private static final String redOneNoteAuto = "Red One Note Auto";
-  //private static final String blueOneNoteAuto = "Blue One Note Auto";
+    // Declaration of autonomous routine names
+    private static final String kDefaultAuto = "Default";
+    private static final String kCustomAuto = "My Auto";
+    // private static final String blueMiddleAuto = "Blue Middle Auto";
+    // private static final String redMiddleAuto = "Red Middle Auto";
+    // private static final String redOneNoteAuto = "Red One Note Auto";
+    // private static final String blueOneNoteAuto = "Blue One Note Auto";
 
-  private static final String rightOneNote = "Right One Note Auto";
-  private static final String leftOneNote = "Left One Note Auto";
-  private static final String middleTwoNote = "Middle Two Note Auto";
+    private static final String rightOneNote = "Right One Note Auto";
+    private static final String leftOneNote = "Left One Note Auto";
+    private static final String middleTwoNote = "Middle Two Note Auto";
 
-
-
-  private String m_autoSelected;
-  private final SendableChooser<String> m_chooser = new SendableChooser<>();
+    private String m_autoSelected;
+    private final SendableChooser<String> m_chooser = new SendableChooser<>();
 
     // controls
-  private Joystick joystick; //joystick used for DRIVING
+    private Joystick joystick; // joystick used for DRIVING
 
-  //accelerometer
-  private BuiltInAccelerometer builtInAccelerometer;
-  final int accelCalibrateBtn = 2;
-  final int autoBalanceBtn = 3;
-  private double pitchBias = 0;
-  private double gravity = -9.81;
+    // functional button mapping
+    // final int funcReverseBtn = 1;
+    // final int openGripper = 5;
+    // final int closeGripper = 6;
+    // final int buttonArmUp = 2;
+    // final int buttonArmDown = 3;
+    final int intakeBtn = 7;
+    final int shootBtn = 8;
+    // final int func1Btn = 1;
+    // final int func2Btn = 2;
+    // final int func3Btn = 3;
+    // final int func4Btn = 4;
 
-  // drive modifiers mapping
-  final int driveSpeedUpBtn = 5;
-  final int driveSpeedDownBtn = 6;
-  final int driveReverseBtn = 1;
+    // drive motors and control objects
+    private CANSparkMax moveMotorID5;
+    private CANSparkMax moveMotorID7;
+    private CANSparkMax moveMotorID6;
+    private CANSparkMax moveMotorID8;
+    private DifferentialDrive differentialDrive;
+    private double driveSpeed = 1;
+    private CANSparkMax climberMotor1;
+    private CANSparkMax climberMotor2;
 
-  // functional button mapping
-  //final int funcReverseBtn = 1;
-  //final int openGripper = 5;
-  //final int closeGripper = 6;
-  //final int buttonArmUp = 2;
-  //final int buttonArmDown = 3;
-  final int intakeBtn = 7;
-  final int shootBtn = 8;
-  //final int func1Btn = 1;
-  //final int func2Btn = 2;
-  //final int func3Btn = 3;
-  //final int func4Btn = 4;
+    // acceleration limiters
+    private SlewRateLimiter limiter0; // Used for limiting forward speed in arcade drive call
+    private SlewRateLimiter limiter1; // Used for limiting turning speed in arcade drive call
 
-  //drive motors and control objects
-  private CANSparkMax moveMotorID5;
-  private CANSparkMax moveMotorID7;
-  private MotorControllerGroup rightMoveMotors;
-  private CANSparkMax moveMotorID6;
-  private CANSparkMax moveMotorID8;
-  private MotorControllerGroup leftMoveMotors;
-  private DifferentialDrive differentialDrive;
-  private double driveSpeed = 1;
-  private CANSparkMax climberMotor1;
-  private CANSparkMax climberMotor2;
+    // navX MXP using USB
+    private AHRS gyro;
+    private GenericEntry gyroCompassEntry;
+    // AprilTag detection system
+    public AprilTagTracker aprilTagTracker;
+    // for colour actions
+    private boolean isRed = false;
+    // Arm subsystem
+    public Arm arm;
 
-  //acceleration limiters
-  private SlewRateLimiter limiter0;
-  private SlewRateLimiter limiter1;
-  private SlewRateLimiter limiter2;
-  private SlewRateLimiter limiter3;
+    public double autoAngle;
+    public int autoStepNum = 0;
+    public final double inchesPerEnocderClick = 1.76; // TODO: Update this value based on the 42 encoder ticks/2PI radians and the gear ratio on the drivetrain
+    public double distanceInInchesToMove;
+    public double autoXValueTwoNote; // used to get angle for middle two note auto shooting angle
 
-  // navX MXP using USB
-  private AHRS gyro;
-  private GenericEntry gyroCompassEntry;
-  //april tag
-// for colour actions
-  public AprilTagTracker aprilTagTracker;
-  private boolean isRed = false;
-  public Arm arm; 
-  public double yawAngle;
-  public double minAngle;
-  public double maxAngle;
-
-  public double autoAngle;
-  public int autoStepNum = 0;
-  public double inchesPerEnocderClick = 1.76;
-  public double distanceInInchesToMove;
-  public double autoXValueTwoNote; // used to get angle for middle two note auto shooting angle
     /**
-   * This function is run when the robot is first started up and should be used for any
-   * initialization code.
-   */
-  //determines shooting angle from distance obtained from Apriltag and shooting speed
+     * Determines the angle needed to shoot the ring at.
+     * Calculates the angle specifically to reach a height of 1.98-2.11 metres (the
+     * height of the speaker hole).
+     * 
+     * @param distance, the horizontal distance to the speaker, obtained from vision
+     *                  system
+     * @param Vi,       the speed of the shooter
+     * @return the angle in degrees, measured from the horizontal, to shoot at
+     */
+    public double projectileAngle(double distanceInM, double ViInMps) { // TODO: Update arm.getArmDistanceFromCamera and arm.getArmHeight
+        double maxAngle = -1;
+        double minAngle = -1;
+        for (double i = 40; i < 90; i += 0.1) {
+            double shooterHeight = arm.getArmHeight(i);
+            double shooterExtraDistance = arm.getArmDistanceFromCamera(i);
+            double y = (distanceInM+shooterExtraDistance) * Math.tan(Math.toRadians(i))
+                    + 4.905 * Math.pow(distanceInM+shooterExtraDistance, 2) / Math.pow(ViInMps, 2)
+                            / Math.pow(Math.cos(Math.toRadians(i)), 2);
+            if (y > 1.98-shooterHeight && y < 2.11-shooterHeight) {
+                if (minAngle == -1) minAngle = i;
+                if (maxAngle == -1) maxAngle = i;
 
+                if (i>maxAngle) maxAngle = i;
+                if (i>maxAngle) minAngle = i;
 
-  public double projectileAngle(double distance, double Vi) {
-
-    for (double i = 40; i < 90; i+=0.1) {
-      double y = distance * Math.tan(Math.toRadians(i)) + 4.905 * Math.pow(distance, 2)/Math.pow(Vi, 2)/Math.pow(Math.cos(Math.toRadians(i)), 2);
-      if (y > 1.98) {
-        minAngle = i;
-        break;
-      }
-    }
-
-    for (double i = 90; i >= 40; i-=0.1) {
-      double y = distance * Math.tan(Math.toRadians(i)) + 4.905 * Math.pow(distance, 2)/Math.pow(Vi, 2)/Math.pow(Math.cos(Math.toRadians(i)), 2);
-      if (y < 2.11) {
-        maxAngle = i;
-        break;
-      }
-    }
-    autoAngle = (maxAngle + minAngle) / 2;
-
-    return (minAngle + maxAngle)/2;      //Returns the average value, needs testing
-  }
-
-  @Override
-  public void robotInit() { // init == initiate == happens once an/d at the beginning
-    //colour selection and actions
-  Optional<Alliance> ally = DriverStation.getAlliance();
-    if (ally.isPresent()) {
-    if (ally.get() == Alliance.Red) {
-      isRed = true;
-    }
-    if (ally.get() == Alliance.Blue) {
-      isRed = false;
-    }
-}
-
-    aprilTagTracker = new AprilTagTracker("Arducam_OV9281_USB_Camera");
-    arm = new Arm();
-    // Places a compass indicator for the gyro heading on the dashboard
-    gyro = new AHRS(SerialPort.Port.kUSB);
-    ShuffleboardTab compassTab = Shuffleboard.getTab("Compass");
-    gyroCompassEntry = compassTab.add("Gyro Compass", 0)
-    .withWidget(BuiltInWidgets.kGyro)
-    .getEntry();
-
-    limiter0 = new SlewRateLimiter(2); //x-axis drive
-    limiter1 = new SlewRateLimiter(1.5); //y-axis drive
-
-    //ShuffleboardTab autoTab = Shuffleboard.getTab("Auto");
-    //autoSelection = autoTab.add("Auto Selection", 1);
-
-    m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
-    //m_chooser.addOption("blueMiddleAuto", blueMiddleAuto); // Blue, Big Cheese
-    //m_chooser.addOption("redMiddleAuto", redMiddleAuto); // Red, Big Cheese
-    //m_chooser.addOption("redOneNoteAuto", redOneNoteAuto); // Red, small cheese
-    //m_chooser.addOption("blueOneNoteAuto", blueOneNoteAuto); // Blue, small cheese
-    m_chooser.addOption("leftOneNote", leftOneNote); // Both sides, if robot needs to turn left, small cheese
-    m_chooser.addOption("rightOneNote", rightOneNote); // Both sides, if robot needs to turn left, small cheese
-    m_chooser.addOption("middleTwoNote", middleTwoNote); // Both sides, no turning, big cheese
-    m_chooser.addOption("kCustomAuto", kCustomAuto); // test/temporary
-    SmartDashboard.putData("Auto choices", m_chooser);
-    // Initialize joystick object
-    joystick = new Joystick(0); // Controller in port 0
-
-    // Drive motor object initialization
-    moveMotorID5 = new CANSparkMax(5, MotorType.kBrushless); // NEO motor with CAN ID 5, right side
-    moveMotorID6 = new CANSparkMax(6, MotorType.kBrushless); // NEO motor with CAN ID 6, left side
-    moveMotorID7 = new CANSparkMax(7, MotorType.kBrushless); // NEo motor with CAN ID 7, right side
-    moveMotorID8 = new CANSparkMax(8, MotorType.kBrushless); // NEO motor with CAN ID 8, left side
-    // climber motor initialization
-    climberMotor1 = new CANSparkMax(10, MotorType.kBrushed);
-    climberMotor2 = new CANSparkMax(11, MotorType.kBrushed);
-
-    // Fix wiring inversion
-    moveMotorID7.setInverted(true); // wiring thing, motor is flipped, bad wiring
-
-    // Initialize motor groups
-    moveMotorID7.follow(moveMotorID5); // because they are on the same side
-    moveMotorID8.follow(moveMotorID6); // ^
-  
-
-    // Differential drive object initialization
-    differentialDrive = new DifferentialDrive(moveMotorID6, moveMotorID5); //class that handles arcade drive, (one stick controller)
-    m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
-    m_chooser.addOption("My Auto", kCustomAuto);
-    SmartDashboard.putData("Auto choices", m_chooser);
-
-
-  
-  }
-
-  /**
-   * This function is called every 20 ms, no matter the mode. Use this for items like diagnostics
-   * that you want ran during disabled, autonomous, teleoperated and test.
-   *
-   * <p>This runs after the mode specific periodic functions, but before LiveWindow and
-   * SmartDashboard integrated updating.
-   */
-  @Override
-  public void robotPeriodic() {
-    aprilTagTracker.UpdateTracker();
-    //detects if there is a note in the intake
-    arm.checkSensorandNotify();
-    // Read the current yaw angle from the gyro
-    yawAngle = gyro.getYaw();
-    // Convert the yaw angle to a 0-360 range for compass heading
-    double compassHeading = yawAngle < 0 ? 360 + yawAngle : yawAngle;
-    // Update the Shuffleboard compass widget with the current heading
-    gyroCompassEntry.setDouble(compassHeading);
-    //aprilTags and actions
-    //MAKE ONLY HAPPEN WHEN BUTTON PUSHED!!!
-    if ((isRed && aprilTagTracker.HasTargetWithId(4)) || (!isRed && aprilTagTracker.HasTargetWithId(7))) {
-      SmartDashboard.putString("AprilTag", "Middle shooter AprilTag detected");
-      double yaw;
-      double pitch;
-      double AprilTagHeight = 132;
-      double cameraHeight = 0;
-      double distance;
-      if (isRed)  {
-        yaw = aprilTagTracker.GetTargetWithId(4).yaw;
-        pitch = aprilTagTracker.GetTargetWithId(4).pitch;
-
-      }
-      else {
-        yaw = aprilTagTracker.GetTargetWithId(7).yaw;
-        pitch = aprilTagTracker.GetTargetWithId(7).pitch;
-      }
-      distance = AprilTagHeight - cameraHeight / Math.tan(pitch);
-      arm.prepareToShoot(0.75);
-      
-      arm.moveToPosition(projectileAngle(distance, arm.calculateShooterSpeed())); //need initial velocity
-     }
-    else {
-      SmartDashboard.putString("AprilTag", "No AprilTag detected");
-    }
-    }
-
-   // periodic == happens like every milisecond
-
-  /**
-   * This autonomous (along with the chooser code above) shows how to select between different
-   * autonomous modes using the dashboard. The sendable chooser code works with the Java
-   * SmartDashboard. If you prefer the LabVIEW Dashboard, remove all of the chooser code and
-   * uncomment the getString line to get the auto name from the text box below the Gyro
-   *
-   * <p>You can add additional auto modes by adding additional comparisons to the switch structure
-   * below with additional strings. If using the SendableChooser make sure to add them to the
-   * chooser code above as well.
-   */
-  
-   public void autoMove(double lW, double rW)
-   {
-     moveMotorID6.set(lW); //LEFT SIDE GOING FORWARD
-     moveMotorID8.set(lW);
-     moveMotorID5.set(rW); //RIGHT SIDE, GOING BACK
-     moveMotorID7.set(rW);
-   }
-
-   @Override
-  public void autonomousInit() {
-    m_autoSelected = m_chooser.getSelected();
-    // m_autoSelected = SmartDashboard.getString("Auto Selector", kDefaultAuto);
-    System.out.println("Auto selected: " + m_autoSelected);
-
-
-
-  }
-
-  /** This function is called periodically during autonomous. */
-  @Override
-  public void autonomousPeriodic() {
-      switch (m_autoSelected) {
-        case kCustomAuto:
-          // Put custom auto code here
-          break;
-
-        case leftOneNote: //=====================================================================================================
-            
-          switch(autoStepNum){
-            case 1: //move arm up
-                arm.moveToPosition(15);
-              if (arm.getArmAngle() == 15)
-              {
-                arm.setMotorPower(0);
-                autoStepNum = 2;
+                minAngle = i;
                 break;
-              }
-            case 2:
-              arm.shooter(0.5);
-              if (arm.checkSensorandNotify() == true)
-              {
-                arm.shooter(0);
-                autoStepNum = 3;
-                break;
-              }
-            case 3:
-              distanceInInchesToMove = 12;
-              if (Math.abs(moveMotorID5.getEncoder().getPosition()) < distanceInInchesToMove / inchesPerEnocderClick)
-              {
-                autoMove(0.5, 0.5);
-              }
-              else
-              {
-                autoMove(0,0);
-                autoStepNum = 4;
-                break;
-              }
-            case 4:
-              //turning right
-              if (gyro.getYaw() != 60)
-              {
-                autoMove(0.2,-0.2);
-              }
-              else 
-              {
-                autoMove(0,0);
-                autoStepNum = 5;
-                break;
-              }
-            case 5:
-              distanceInInchesToMove = 65;
-              if (Math.abs(moveMotorID5.getEncoder().getPosition()) < distanceInInchesToMove / inchesPerEnocderClick)
-              {
-                autoMove(0.5, 0.5);
-              }
-              else
-              {
-                autoMove(0,0);
-                autoStepNum = 0;
-                break;
-              }
-            default:
-
-              break;
-          }
-          
-
-        case rightOneNote: //=========================================================================================================
-
-          switch(autoStepNum){
-            case 1:
-                arm.moveToPosition(15);
-              //}
-              if (arm.getArmAngle() == 15)
-              {
-                arm.setMotorPower(0);
-                autoStepNum = 2;
-                break;
-              }
-            case 2:
-              arm.shooter(0.5);
-              if (arm.checkSensorandNotify() == true)
-              {
-                arm.shooter(0);
-                autoStepNum = 3;
-                break;
-              }
-            case 3:
-              distanceInInchesToMove = 12;
-              if (Math.abs(moveMotorID5.getEncoder().getPosition()) < distanceInInchesToMove / inchesPerEnocderClick)
-              {
-                autoMove(0.5, 0.5);
-              }
-              else
-              {
-                autoMove(0,0);
-                autoStepNum = 4;
-                break;
-              }
-            case 4:
-              //turning left
-              if (gyro.getYaw() != -60)
-              {
-                autoMove(-0.2,0.2);
-              }
-              else 
-              {
-                autoMove(0,0);
-                autoStepNum = 5;
-                break;
-              }
-            case 5:
-              distanceInInchesToMove = 65;
-              if (Math.abs(moveMotorID5.getEncoder().getPosition()) < distanceInInchesToMove / inchesPerEnocderClick)
-              {
-                autoMove(0.5, 0.5);
-              }
-              else
-              {
-                autoMove(0,0);
-                autoStepNum = 0;
-                break;
-              }
-            default:
-
-            break;
-              
-          }
-
-
-        case middleTwoNote: //====================================================================================================
-
-        switch(autoStepNum){
-          case 1: //arm goes up
-              arm.moveToPosition(15);
-            if (arm.getArmAngle() == 15)
-            {
-              arm.setMotorPower(0);
-              autoStepNum = 2;
-              break;
             }
-          case 2: // shoot
-            arm.shooter(0.5);
-            if (arm.checkSensorandNotify() == true)
-            {
-              arm.shooter(0);
-              autoStepNum = 3;
-              break;
-            }
-
-          case 3: // move arm down
-            arm.moveToPosition(0);
-            if (arm.getArmAngle() == 0)
-            {
-              arm.setMotorPower(0);
-              autoStepNum = 4;
-              break;
-            }
-
-          case 4: //move forward to other note
-            //distanceInInchesToMove = 65;
-            arm.intake(0.5);
-            if (arm.checkSensorandNotify() == true)
-            {
-              autoMove(0.5, 0.5);
-              autoXValueTwoNote = moveMotorID5.getEncoder().getPosition();
-            }
-            else
-            {
-              autoMove(0,0);
-              arm.intake(0);
-              autoStepNum = 5;
-              break;
-            }
-          case 5:
-            double autoShoot = Math.atan(80 / autoXValueTwoNote);
-            arm.moveToPosition(autoShoot);
-            if (arm.getArmAngle() == autoShoot)
-            {
-              arm.setMotorPower(0);
-              autoStepNum = 6;
-              break;
-            }
-          case 6:
-            arm.shooter(0.5);
-            if (arm.checkSensorandNotify() == true)
-            {
-              arm.shooter(0);
-              autoStepNum = 0;
-              break;
-            }
-            
-          default:
-
-          break;
         }
 
-      
-
-        
-
-        case kDefaultAuto:
-        default:
-          // Put default auto code here
-          break;
-      }
-  }
-
-  /** This function is called once when teleop is enabled. */
-  @Override
-  public void teleopInit() {
-
-  }
-
-  /** This function is called periodically during operator control. */
-  @Override
-  public void teleopPeriodic() {
-    //drives robot
-    differentialDrive.arcadeDrive(limiter0.calculate(joystick.getX() * driveSpeed * 0.5), limiter1.calculate(joystick.getY() * driveSpeed));
-    //}
-    //eventually will define what each word means, e.g limiter1 refers safety in limiting acceleration speed
-    if (Math.abs(joystick.getY()) <= 0.1)
-    {
-   //  armMotor1.set(0);
-   //   armMotor2.set(0); //outputs changed to 0, results in no motor function
+        if (minAngle != -1 && maxAngle != -1)
+            return (minAngle + maxAngle) / 2; // Returns the average value, needs testing
+        return -1;  // Default result returned when no valid angles were found
     }
-    else
+
+    /**
+     * Moves the robot in autonomous mode.
+     * 
+     * @param lW, the power to set the motors on the left of the drive train
+     * @param rW, the power to set the motors on the right of the drive train
+     */
+    public void autoMove(double lW, double rW) {
+        moveMotorID6.set(lW); // LEFT SIDE GOING FORWARD
+        moveMotorID8.set(lW);
+        moveMotorID5.set(rW); // RIGHT SIDE, GOING BACK
+        moveMotorID7.set(rW);
+    }
+
+    /**
+     * Automatically aim and shoot at the speaker when the center AprilTag is detected.
+     * 
+     */
+    public void automaticallyShoot()
     {
-   //   armMotor1.set(-1*joystick2.getY());
-   //   armMotor2.set(-1*joystick2.getY()); // output value == getY (joystick) and -1 because wiring
-      double pos = arm.getArmAngle();
-      //drives robot
-      //if (enableDrive){
-      differentialDrive.arcadeDrive(limiter0.calculate(joystick.getX() * driveSpeed * 0.5), limiter1.calculate(joystick.getY() * driveSpeed));
-      //}
-      //eventually will define what each word means, e.g limiter1 refers safety in limiting acceleration speed
-      if (Math.abs(joystick.getZ()) <= 0.1)
-      {
-        arm.armMotor1.set(0);
-        arm.armMotor2.set(0); //outputs changed to 0, results in no motor function
-      }
-      else
-      {
-        arm.armMotor1.set(-1*joystick.getZ());
-        arm.armMotor2.set(-1*joystick.getZ()); // output value == getY (joystick) and -1 because wiring
-      }
-      //check if intake button pressed
+        // Check that AprilTag is detected
+        if ((isRed && aprilTagTracker.HasTargetWithId(4)) || (!isRed && aprilTagTracker.HasTargetWithId(7))) {
+            // Determine AprilTag location relative to camera
+            double yaw;
+            double pitch;
+            double AprilTagHeight = 132; // Constant height from manual, unit is cm
+            double cameraHeight = 0; // TODO: Get value from robot, height from ground to centre of camera   
+            double distance;
+            if (isRed) {
+                yaw = aprilTagTracker.GetTargetWithId(4).GetYaw();
+                pitch = aprilTagTracker.GetTargetWithId(4).GetPitch();
 
-      //if joystick up, pos += a;
+            } else {
+                yaw = aprilTagTracker.GetTargetWithId(7).GetYaw();
+                pitch = aprilTagTracker.GetTargetWithId(7).GetPitch();
+            }
 
-      if (joystick.getY() > 0 && pos < 90) // check to see if works
-      {
-        arm.moveToPosition(pos+10);
-      }
-      else if (joystick.getY() < 0 && pos > 0)
-      {
-        arm.moveToPosition(pos-10);
-      }
+            // Translating yaw
+            // Done simply by trying to get yaw from AprilTag close to 0, that means we are directly aligned with the AprilTag
+            final double turningKp = 0.2; // TODO: Adjust as needed, find max value that does not cause the robot to move back and forth around yaw=0
+            double turningPower = yaw*turningKp;
+            autoMove(turningPower, -turningPower);
 
-      if (joystick.getRawButton(7))
-      {
-        arm.intake(0.7); //get actual power variable
-      }
-      if (joystick.getRawButton(8))
-      {
-        arm.shooter(0.7); //^^^
-      }
-      //climber
-      if (joystick.getRawButton(3))
-      {
-        climberMotor1.set(0.5);
-        climberMotor2.set(0.5);
-      }
-      if (joystick.getRawButton(4))
-      {
-        climberMotor1.set(-0.5);
-        climberMotor2.set(-0.5);
-      }
-  }
-}
+            // Translating pitch
+            // Run the shooter motors so that we can determine speed
+            arm.prepareToShoot(1); // TODO: Adjust as needed, power of shooting motors
 
-  /** This function is called once when the robot is disabled. */
-  @Override
-  public void disabledInit() {}
+            // Calculate the angle needed to fire at the speaker
+            distance = (AprilTagHeight - cameraHeight / Math.tan(pitch)); // Distance from camera to Speaker wall
 
-  /** This function is called periodically when disabled. */
-  @Override
-  public void disabledPeriodic() {}
+            double targetAngle = projectileAngle(distance/100, arm.calculateShooterSpeed()/100);
 
-  /** This function is called once when test mode is enabled. */
-  @Override
-  public void testInit() {}
+            // If acceleration is low and the arm is at the needed angle, fire
+            final double accelerationThreshold = 0.1; // TODO: Adjust as needed, determines when the speed of the shooter motors has leveled out by considering the average velocity between two speed measurements
+            final double armThreshold = 2; // TODO: Adjust as needed, determines the allowable error for the arm shooter direction, we can fire when the arm angle is +-armThreshold the target angle
+            final double yawThreshold = 2; // TODO: Adjust as needed, determines the allowable error in yaw
 
-  /** This function is called periodically during test mode. */
-  @Override
-  public void testPeriodic() {}
+            // If motor speed is level, and aimed position is within allowable threshold, fire
+            if (arm.getAcceleration() < accelerationThreshold && Math.abs(arm.getArmAngle()-targetAngle)<armThreshold && Math.abs(yaw)<yawThreshold)
+                arm.sendNoteToShooter(1); // TODO: Change as needed if 100% is too violent
+            else
+                arm.sendNoteToShooter(0);
+        }
+    }
 
-  /** This function is called once when the robot is first started up. */
-  @Override
-  public void simulationInit() {}
+    /**
+     * This function is run when the robot is first started up and should be used
+     * for any initialization code.
+     */
+    @Override
+    public void robotInit() { // init == initiate == happens once an/d at the beginning
+        // Determine robot colour
+        Optional<Alliance> ally = DriverStation.getAlliance();
+        if (ally.isPresent()) {
+            if (ally.get() == Alliance.Red) {
+                isRed = true;
+            }
+            if (ally.get() == Alliance.Blue) {
+                isRed = false;
+            }
+        }
 
-  /** This function is called periodically whilst in simulation. */
-  @Override
-  public void simulationPeriodic() {}
+        // Initialize arm and vision system components
+        aprilTagTracker = new AprilTagTracker("Arducam_OV9281_USB_Camera");
+        arm = new Arm();
+
+        // Places a compass indicator for the gyro heading on the dashboard
+        gyro = new AHRS(SerialPort.Port.kUSB);
+        ShuffleboardTab compassTab = Shuffleboard.getTab("Compass");
+        gyroCompassEntry = compassTab.add("Gyro Compass", 0)
+                .withWidget(BuiltInWidgets.kGyro)
+                .getEntry();
+
+        // TODO: Adjust limiters as needed (smooths acceleration when driving the robot)
+        limiter0 = new SlewRateLimiter(2); // x-axis drive
+        limiter1 = new SlewRateLimiter(1.5); // y-axis drive
+
+        // ShuffleboardTab autoTab = Shuffleboard.getTab("Auto");
+        // autoSelection = autoTab.add("Auto Selection", 1);
+
+        m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
+        // m_chooser.addOption("blueMiddleAuto", blueMiddleAuto); // Blue, Big Cheese
+        // m_chooser.addOption("redMiddleAuto", redMiddleAuto); // Red, Big Cheese
+        // m_chooser.addOption("redOneNoteAuto", redOneNoteAuto); // Red, small cheese
+        // m_chooser.addOption("blueOneNoteAuto", blueOneNoteAuto); // Blue, small
+        // cheese
+        m_chooser.addOption("leftOneNote", leftOneNote); // Both sides, if robot needs to turn left, small cheese
+        m_chooser.addOption("rightOneNote", rightOneNote); // Both sides, if robot needs to turn left, small cheese
+        m_chooser.addOption("middleTwoNote", middleTwoNote); // Both sides, no turning, big cheese
+        m_chooser.addOption("kCustomAuto", kCustomAuto); // test/temporary
+        SmartDashboard.putData("Auto choices", m_chooser);
+
+        // Initialize joystick object
+        joystick = new Joystick(0); // Controller in port 0
+
+        // Drive motor object initialization
+        moveMotorID5 = new CANSparkMax(5, MotorType.kBrushless); // NEO motor with CAN ID 5, right side
+        moveMotorID6 = new CANSparkMax(6, MotorType.kBrushless); // NEO motor with CAN ID 6, left side
+        moveMotorID7 = new CANSparkMax(7, MotorType.kBrushless); // NEo motor with CAN ID 7, right side
+        moveMotorID8 = new CANSparkMax(8, MotorType.kBrushless); // NEO motor with CAN ID 8, left side
+        // climber motor initialization
+        climberMotor1 = new CANSparkMax(10, MotorType.kBrushed);
+        climberMotor2 = new CANSparkMax(11, MotorType.kBrushed);
+
+        // Fix wiring inversion
+        // TODO: Invert motors running backwards to what is expected during testing
+        // moveMotorIDX.setInverted(true); // wiring thing, motor is flipped, bad wiring
+
+        // Initialize motor groups in drivetrain
+        moveMotorID7.follow(moveMotorID5); // because they are on the same side of the drive train
+        moveMotorID8.follow(moveMotorID6); // ^
+
+        // Differential drive object initialization
+        differentialDrive = new DifferentialDrive(moveMotorID6, moveMotorID5); // class that handles arcade drive, (one
+                                                                               // stick controller)
+    }
+
+    /**
+     * This function is called every 20 ms, no matter the mode. Use this for items
+     * like diagnostics
+     * that you want ran during disabled, autonomous, teleoperated and test.
+     *
+     * <p>
+     * This runs after the mode specific periodic functions, but before LiveWindow
+     * and
+     * SmartDashboard integrated updating.
+     */
+    @Override
+    public void robotPeriodic() {
+        // Updates the target's seen by the vision system
+        aprilTagTracker.UpdateTracker();
+
+        // Tells the driver if the speaker's center April tag is located
+        if ((isRed && aprilTagTracker.HasTargetWithId(4)) || (!isRed && aprilTagTracker.HasTargetWithId(7)))
+            SmartDashboard.putString("AprilTag", "Middle Speaker AprilTag detected");
+        else
+            SmartDashboard.putString("AprilTag", "No Speaker AprilTag detected");
+
+        // Provides diagnostic data to the driver
+        // Detects if there is a note in the intake
+        arm.checkSensorandNotify();
+
+        // Displays robot compass heading to the driver
+        // Read the current yaw angle from the gyro
+        double yawAngle = gyro.getYaw();
+        // Convert the yaw angle to a 0-360 range for compass heading
+        double compassHeading = yawAngle < 0 ? 360 + yawAngle : yawAngle;
+        // Update the Shuffleboard compass widget with the current heading
+        gyroCompassEntry.setDouble(compassHeading);
+
+        // aprilTags and actions
+        // MAKE ONLY HAPPEN WHEN BUTTON PUSHED!!!
+        // if ((isRed && aprilTagTracker.HasTargetWithId(4)) || (!isRed &&
+        // aprilTagTracker.HasTargetWithId(7))) {
+        // SmartDashboard.putString("AprilTag", "Middle shooter AprilTag detected");
+        // double yaw;
+        // double pitch;
+        // double AprilTagHeight = 132;
+        // double cameraHeight = 0;
+        // double distance;
+        // if (isRed) {
+        // yaw = aprilTagTracker.GetTargetWithId(4).GetYaw();
+        // pitch = aprilTagTracker.GetTargetWithId(4).GetPitch();
+
+        // } else {
+        // yaw = aprilTagTracker.GetTargetWithId(7).GetYaw();
+        // pitch = aprilTagTracker.GetTargetWithId(7).GetPitch();
+        // }
+        // distance = AprilTagHeight - cameraHeight / Math.tan(pitch);
+        // arm.prepareToShoot(0.75);
+
+        // arm.moveToPosition(projectileAngle(distance, arm.calculateShooterSpeed()));
+        // // need initial velocity
+        // } else {
+        // SmartDashboard.putString("AprilTag", "No AprilTag detected");
+        // }
+    }
+
+    // periodic == happens like every milisecond
+    @Override
+    public void autonomousInit() {
+        m_autoSelected = m_chooser.getSelected();
+        // m_autoSelected = SmartDashboard.getString("Auto Selector", kDefaultAuto);
+        System.out.println("Auto selected: " + m_autoSelected);
+
+    }
+
+    /** This function is called periodically during autonomous. */
+    @Override
+    public void autonomousPeriodic() {
+        switch (m_autoSelected) {
+            case kCustomAuto:
+                // Put custom auto code here
+                break;
+
+            case leftOneNote: // =====================================================================================================
+                switch (autoStepNum) {
+                    case 1: // move arm up
+                        arm.moveToPosition(15);
+                        if (arm.getArmAngle() == 15) {
+                            arm.setMotorPower(0);
+                            autoStepNum = 2;
+                            break;
+                        }
+                    case 2:
+                        arm.shoot(0.5);
+                        if (arm.checkSensorandNotify() == true) {
+                            arm.shoot(0);
+                            autoStepNum = 3;
+                            break;
+                        }
+                    case 3:
+                        distanceInInchesToMove = 12;
+                        if (Math.abs(moveMotorID5.getEncoder().getPosition()) < distanceInInchesToMove
+                                / inchesPerEnocderClick) {
+                            autoMove(0.5, 0.5);
+                        } else {
+                            autoMove(0, 0);
+                            autoStepNum = 4;
+                            break;
+                        }
+                    case 4:
+                        // turning right
+                        if (gyro.getYaw() != 60) {
+                            autoMove(0.2, -0.2);
+                        } else {
+                            autoMove(0, 0);
+                            autoStepNum = 5;
+                            break;
+                        }
+                    case 5:
+                        distanceInInchesToMove = 65;
+                        if (Math.abs(moveMotorID5.getEncoder().getPosition()) < distanceInInchesToMove
+                                / inchesPerEnocderClick) {
+                            autoMove(0.5, 0.5);
+                        } else {
+                            autoMove(0, 0);
+                            autoStepNum = 0;
+                            break;
+                        }
+                    default:
+
+                        break;
+                }
+
+            case rightOneNote: // =========================================================================================================
+
+                switch (autoStepNum) {
+                    case 1:
+                        arm.moveToPosition(15);
+                        // }
+                        if (arm.getArmAngle() == 15) {
+                            arm.setMotorPower(0);
+                            autoStepNum = 2;
+                            break;
+                        }
+                    case 2:
+                        arm.shoot(0.5);
+                        if (arm.checkSensorandNotify() == true) {
+                            arm.shoot(0);
+                            autoStepNum = 3;
+                            break;
+                        }
+                    case 3:
+                        distanceInInchesToMove = 12;
+                        if (Math.abs(moveMotorID5.getEncoder().getPosition()) < distanceInInchesToMove
+                                / inchesPerEnocderClick) {
+                            autoMove(0.5, 0.5);
+                        } else {
+                            autoMove(0, 0);
+                            autoStepNum = 4;
+                            break;
+                        }
+                    case 4:
+                        // turning left
+                        if (gyro.getYaw() != -60) {
+                            autoMove(-0.2, 0.2);
+                        } else {
+                            autoMove(0, 0);
+                            autoStepNum = 5;
+                            break;
+                        }
+                    case 5:
+                        distanceInInchesToMove = 65;
+                        if (Math.abs(moveMotorID5.getEncoder().getPosition()) < distanceInInchesToMove
+                                / inchesPerEnocderClick) {
+                            autoMove(0.5, 0.5);
+                        } else {
+                            autoMove(0, 0);
+                            autoStepNum = 0;
+                            break;
+                        }
+                    default:
+
+                        break;
+
+                }
+
+            case middleTwoNote: // ====================================================================================================
+
+                switch (autoStepNum) {
+                    case 1: // arm goes up
+                        arm.moveToPosition(15);
+                        if (arm.getArmAngle() == 15) {
+                            arm.setMotorPower(0);
+                            autoStepNum = 2;
+                            break;
+                        }
+                    case 2: // shoot
+                        arm.shoot(0.5);
+                        if (arm.checkSensorandNotify() == true) {
+                            arm.shoot(0);
+                            autoStepNum = 3;
+                            break;
+                        }
+
+                    case 3: // move arm down
+                        arm.moveToPosition(0);
+                        if (arm.getArmAngle() == 0) {
+                            arm.setMotorPower(0);
+                            autoStepNum = 4;
+                            break;
+                        }
+
+                    case 4: // move forward to other note
+                        // distanceInInchesToMove = 65;
+                        arm.intake(0.5);
+                        if (arm.checkSensorandNotify() == true) {
+                            autoMove(0.5, 0.5);
+                            autoXValueTwoNote = moveMotorID5.getEncoder().getPosition();
+                        } else {
+                            autoMove(0, 0);
+                            arm.intake(0);
+                            autoStepNum = 5;
+                            break;
+                        }
+                    case 5:
+                        double autoShoot = Math.atan(80 / autoXValueTwoNote);
+                        arm.moveToPosition(autoShoot);
+                        if (arm.getArmAngle() == autoShoot) {
+                            arm.setMotorPower(0);
+                            autoStepNum = 6;
+                            break;
+                        }
+                    case 6:
+                        arm.shoot(0.5);
+                        if (arm.checkSensorandNotify() == true) {
+                            arm.shoot(0);
+                            autoStepNum = 0;
+                            break;
+                        }
+
+                    default:
+
+                        break;
+                }
+
+            case kDefaultAuto:
+            default:
+                // Put default auto code here
+                break;
+        }
+    }
+
+    /** This function is called once when teleop is enabled. */
+    @Override
+    public void teleopInit() {
+
+    }
+
+    /** This function is called periodically during operator control. */
+    @Override
+    public void teleopPeriodic() {
+
+        // Drives robot using controller X and Y axis
+        differentialDrive.arcadeDrive(limiter0.calculate(joystick.getX() * driveSpeed * 0.5),
+                limiter1.calculate(joystick.getY() * driveSpeed));
+        // eventually will define what each word means, e.g limiter1 refers safety in
+        // limiting acceleration speed
+
+        // Pitching the arm
+        if (Math.abs(joystick.getZ()) <= 0.1) { //TODO: Adjust deadzone as needed
+            arm.setMotorPower(0);
+        } else {
+            arm.setMotorPower(joystick.getZ()); // Set power based on y axis of rightmost joystick
+        }
+
+        // if joystick up, pos += a;
+        // if (joystick.getY() > 0 && pos < 90) // check to see if works
+        // {
+        // arm.moveToPosition(pos + 10);
+        // } else if (joystick.getY() < 0 && pos > 0) {
+        // arm.moveToPosition(pos - 10);
+        // }
+
+        // Running intake
+        if (joystick.getRawButton(7)) {
+            arm.intake(0.7); // get actual power variable
+        } else
+            arm.intake(0);
+
+        // Shooting
+        if (joystick.getRawButton(8))
+            arm.shoot(0.7); // ^^^
+        else
+            arm.shoot(0);
+
+        // Automatically Shooting
+        if (joystick.getRawButton(1)) // TODO: Remap button, I chose this randomly
+            automaticallyShoot();
+        ; // Only runs when AprilTag is detected
+
+        // Running climber
+        if (joystick.getRawButton(3)) {
+            climberMotor1.set(0.5); // TODO: Adjust climber speed as needed
+            climberMotor2.set(0.5);
+        } else if (joystick.getRawButton(4)) {
+            climberMotor1.set(-0.5);
+            climberMotor2.set(-0.5);
+        } else {
+            climberMotor1.set(0);
+            climberMotor2.set(0);
+        }
+    }
+
+    /** This function is called once when the robot is disabled. */
+    @Override
+    public void disabledInit() {
+    }
+
+    /** This function is called periodically when disabled. */
+    @Override
+    public void disabledPeriodic() {
+    }
+
+    /** This function is called once when test mode is enabled. */
+    @Override
+    public void testInit() {
+    }
+
+    /** This function is called periodically during test mode. */
+    @Override
+    public void testPeriodic() {
+    }
+
+    /** This function is called once when the robot is first started up. */
+    @Override
+    public void simulationInit() {
+    }
+
+    /** This function is called periodically whilst in simulation. */
+    @Override
+    public void simulationPeriodic() {
+    }
 }

@@ -121,16 +121,17 @@ public class Arm {
 
     public double getArmHeight(double armAngle)
     {
-        // TODO: Relate the distance from the ground to the shooter to the angle of the arm
-        // Get the mech team to do this, they'll be bored now
-        return 0;
+        //TODO: Relate the distance from the ground to the shooter to the angle of the arm
+        double armHeight = 0.6 * Math.sin(Math.toRadians(armAngle + 12.5)) + 0.325;
+        return armHeight;
     }
 
 
     public double getArmDistanceFromCamera(double armAngle)
     {
-        // TODO: Relate the horizontal distance between the camera and the shooter to the angle of the arm
-        return 0;
+        //TODO: Relate the horizontal distance between the camera and the shooter to the angle of the arm
+        double armDistance = 0.6 * Math.cos(Math.toRadians(armAngle + 12.5)) + 0.12;
+        return armDistance;
     }
 
     /**

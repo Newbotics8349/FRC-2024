@@ -197,7 +197,7 @@ public class Arm {
         } else if (power < -maxPower) {
             power = -maxPower;
         }
-
+            //no note detected
         if (checkSensorandNotify() == false)
             // once the note is in the intake the motor stops
             intakeMotor.set(0);

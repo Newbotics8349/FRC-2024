@@ -23,6 +23,8 @@ import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import frc.robot.AprilTagTracking.*;
 
+import edu.wpi.first.wpilibj.motorcontrol.Spark;
+
 import java.util.Map;
 import java.util.Optional;
 
@@ -89,8 +91,8 @@ public class Robot extends TimedRobot {
     private CANSparkMax moveMotorID8;
     private DifferentialDrive differentialDrive;
     private double driveSpeed = 1;
-    private CANSparkMax climberMotor1;
-    private CANSparkMax climberMotor2;
+    private Spark climberMotor1;
+    private Spark climberMotor2;
 
     // acceleration limiters
     private SlewRateLimiter limiter0; // Used for limiting forward speed in arcade drive call
@@ -268,8 +270,8 @@ public class Robot extends TimedRobot {
         moveMotorID7 = new CANSparkMax(7, MotorType.kBrushless); // NEo motor with CAN ID 7, right side
         moveMotorID8 = new CANSparkMax(8, MotorType.kBrushless); // NEO motor with CAN ID 8, left side
         // climber motor initialization
-        climberMotor1 = new CANSparkMax(10, MotorType.kBrushed);
-        climberMotor2 = new CANSparkMax(11, MotorType.kBrushed);
+        climberMotor1 = new Spark(1); //PMW port 1, right side
+        climberMotor2 = new Spark(2); //PMW port 2, left side
 
         // Fix wiring inversion
         // TODO: Invert motors running backwards to what is expected during testing

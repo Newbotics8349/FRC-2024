@@ -177,7 +177,11 @@ public class Arm {
      * @param power
      */
     public void sendNoteToShooter(double power) {
-        intakeMotor.set(power);
+        intakeMotor.set(-power);
+    }
+
+    public void sendNoteToShooter2(double power) {
+        intakeMotor.set(-power);
     }
 
     // Runs the intake motor at the specified power , automatically shuts off if
@@ -192,20 +196,42 @@ public class Arm {
     public void intake(double power) {
         // Limit maximum power being set
         // TODO: Determine safe max power
-        final double maxPower = 0.5;
-        if (power > maxPower) {
-            power = maxPower;
-        } else if (power < -maxPower) {
-            power = -maxPower;
-        }
-            //no note detected
-        if (checkSensorandNotify() == false)
+        //final double maxPower = 0.5;
+        //if (power > maxPower) {
+        //    power = maxPower;
+        //} else if (power < -maxPower) {
+        //    power = -maxPower;
+        //}
+
+        //sendNoteToShooter(power); // check if this works
+
+        //if (checkSensorandNotify() == false)
+            //note detected
             // once the note is in the intake the motor stops
-            intakeMotor.set(0);
-        else
+        //    intakeMotor.set(0);
+        //else
+            //no note detected
             // if there is no note the intake motor runs
-            intakeMotor.set(power);
-    }
+            //intakeMotor.set(-power); 
+            //sendNoteToShooter(power);
+            //prepareToShoot(power);
+
+            //{
+        // Start to run the shooter motors at the specified speed
+        //prepareToShoot(power);
+
+            //final double accelerationThreshold = 0.1; // TODO: Adjust as needed, this should be as low as possible while being timely and accurate
+            //double curAvgAcceleration = getAcceleration();
+
+            // if shooter speed has leveled out, fire, otherwise wait
+            //if (lastShooterSpeed != 0 && curAvgAcceleration <= accelerationThreshold)
+            //    sendNoteToShooter(power==0?0:1);
+            //else sendNoteToShooter(0);
+        sendNoteToShooter2(power);
+        //}
+
+
+        }
 
     /*
      * Runs the motors controlling the arm pitch at the specified motor power.
@@ -213,12 +239,12 @@ public class Arm {
     public void setMotorPower(double power) {
         // Do not run motors if already at boundary angles
         // TODO: Make sure positive power causes the arm angle to increase
-        if (getArmAngle() >= maxArmAngle && power > 1 || getArmAngle() <= minArmAngle && power < 1) 
-            power = 0;
+        //if (getArmAngle() >= maxArmAngle && power > 1 || getArmAngle() <= minArmAngle && power < 1) 
+        //    power = 0;
 
         // Limit maximum power being set
         // TODO: Determine safe max power
-        final double maxPower = 0.5;
+        final double maxPower = 0.2;
         // Cap power to positive and negative limits
         if (power > maxPower) {
             power = maxPower;
@@ -226,7 +252,7 @@ public class Arm {
             power = -maxPower;
         }
         armMotor1.set(power);
-        armMotor2.set(power);
+        armMotor2.set(-power);
     }
 
     /*
@@ -238,6 +264,7 @@ public class Arm {
         } else if (angle < minArmAngle) {
             angle = minArmAngle;
         }
+
         final double Kp = 0.05; // TODO: adjust during testing, make this as large as possible without regularly overshooting the target angle
         double error = angle - getArmAngle(); // current position (after converting)*****
         double power = Kp * error;

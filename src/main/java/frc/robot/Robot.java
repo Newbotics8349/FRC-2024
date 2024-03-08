@@ -114,6 +114,8 @@ public class Robot extends TimedRobot {
     public double distanceInInchesToMove;
     public double autoXValueTwoNote; // used to get angle for middle two note auto shooting angle
 
+    public int dPadValue;
+
     /**
      * Determines the angle needed to shoot the ring at.
      * Calculates the angle specifically to reach a height of 1.98-2.11 metres (the
@@ -550,11 +552,31 @@ public class Robot extends TimedRobot {
         // limiting acceleration speed
 
         // Pitching the arm
+
+        dPadValue = joystick.getPOV();
+
+        if (dPadValue == 0)
+        {
+            arm.setMotorPower(0.2);
+        }
+        else if (dPadValue == 180)
+        {
+            arm.setMotorPower(-0.2);
+        }
+        else 
+        {
+            arm.setMotorPower(0);
+        }
+
+
+
+        /*
         if (Math.abs(joystick.getZ()) <= 0.1) { //TODO: Adjust deadzone as needed
             arm.setMotorPower(0);
         } else {
             arm.setMotorPower(joystick.getZ()); // Set power based on y axis of rightmost joystick
         }
+        */
 
         // if joystick up, pos += a;
         // if (joystick.getY() > 0 && pos < 90) // check to see if works
@@ -565,16 +587,16 @@ public class Robot extends TimedRobot {
         // }
 
         // Running intake
-        if (joystick.getRawButton(7)) {
-            arm.intake(0.7); // get actual power variable
-        } else
-            arm.intake(0);
+        if (joystick.getRawButton(6))
+            arm.intake(0.5); // get actual power variable
+        //} else
+        //    arm.intake(0);
 
         // Shooting
-        if (joystick.getRawButton(8))
+        else if (joystick.getRawButton(8))
             arm.shoot(0.7); // ^^^
         else
-            arm.shoot(0);
+            arm.shoot(0); //THIS HAPPENS TWICE
 
         // Automatically Shooting
         if (joystick.getRawButton(1)) // TODO: Remap button, I chose this randomly

@@ -22,6 +22,8 @@ import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import frc.robot.AprilTagTracking.*;
+//import edu.wpi.first.wpilibj.DutyCycleEncoder;
+
 
 import edu.wpi.first.wpilibj.motorcontrol.Spark;
 
@@ -32,6 +34,7 @@ import javax.lang.model.util.ElementScanner14;
 
 import frc.robot.Arm;
 
+import com.ctre.phoenix6.controls.DifferentialPositionDutyCycle;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.None;
 import com.kauailabs.navx.frc.AHRS;
 import com.revrobotics.CANSparkMax;
@@ -103,18 +106,22 @@ public class Robot extends TimedRobot {
     private GenericEntry gyroCompassEntry;
     // AprilTag detection system
     public AprilTagTracker aprilTagTracker;
+    //during games, gets error messages from referencing camera, no overall impact, just errors
     // for colour actions
     private boolean isRed = false;
-    // Arm subsystem
+    // ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,m subsystem
     public Arm arm;
+    final int verticalReading = 461;
+    final double potValueToDegrees = 180.0/3270.0;
 
     public double autoAngle;
-    public int autoStepNum = 0;
+    public int autoStepNum = 1;
     public final double inchesPerEnocderClick = 1.76; // TODO: Update this value based on the 42 encoder ticks/2PI radians and the gear ratio on the drivetrain
     public double distanceInInchesToMove;
     public double autoXValueTwoNote; // used to get angle for middle two note auto shooting angle
-
+    //public int temp = 0;
     public int dPadValue;
+    public double test;
 
     /**
      * Determines the angle needed to shoot the ring at.
@@ -216,6 +223,11 @@ public class Robot extends TimedRobot {
         }
     }
 
+    //public void Timer()
+    //{
+
+    //}
+
     /**
      * This function is run when the robot is first started up and should be used
      * for any initialization code.
@@ -232,10 +244,15 @@ public class Robot extends TimedRobot {
                 isRed = false;
             }
         }
-
         // Initialize arm and vision system components
         aprilTagTracker = new AprilTagTracker("Arducam_OV9281_USB_Camera");
         arm = new Arm();
+
+        //arm.getArmAngle();
+
+        arm.armMotor1.getEncoder().setPosition(1);
+        SmartDashboard.putString("1st motor, arm angle", String.valueOf(arm.armMotor1.getEncoder().getPosition()));
+
 
         // Places a compass indicator for the gyro heading on the dashboard
         gyro = new AHRS(SerialPort.Port.kUSB);
@@ -252,11 +269,6 @@ public class Robot extends TimedRobot {
         // autoSelection = autoTab.add("Auto Selection", 1);
 
         m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
-        // m_chooser.addOption("blueMiddleAuto", blueMiddleAuto); // Blue, Big Cheese
-        // m_chooser.addOption("redMiddleAuto", redMiddleAuto); // Red, Big Cheese
-        // m_chooser.addOption("redOneNoteAuto", redOneNoteAuto); // Red, small cheese
-        // m_chooser.addOption("blueOneNoteAuto", blueOneNoteAuto); // Blue, small
-        // cheese
         m_chooser.addOption("leftOneNote", leftOneNote); // Both sides, if robot needs to turn left, small cheese
         m_chooser.addOption("rightOneNote", rightOneNote); // Both sides, if robot needs to turn left, small cheese
         m_chooser.addOption("middleTwoNote", middleTwoNote); // Both sides, no turning, big cheese
@@ -265,6 +277,9 @@ public class Robot extends TimedRobot {
 
         // Initialize joystick object
         joystick = new Joystick(0); // Controller in port 0
+
+        //DutyCycleEncoder encoder = new DutyCycleEncoder(3);
+
 
         // Drive motor object initialization
         moveMotorID5 = new CANSparkMax(5, MotorType.kBrushless); // NEO motor with CAN ID 5, right side
@@ -300,6 +315,13 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void robotPeriodic() {
+
+        //arm.getArmAngle();
+        SmartDashboard.putString("current step text", String.valueOf(autoStepNum));
+
+        arm.armMotor1.getEncoder().setPosition(1);
+        SmartDashboard.putString("1st motor, arm angle", String.valueOf(arm.armMotor1.getEncoder().getPosition()));
+
         // Updates the target's seen by the vision system
         aprilTagTracker.UpdateTracker();
 
@@ -311,7 +333,7 @@ public class Robot extends TimedRobot {
 
         // Provides diagnostic data to the driver
         // Detects if there is a note in the intake
-        arm.checkSensorandNotify();
+        arm.hasNoNote();
 
         // Displays robot compass heading to the driver
         // Read the current yaw angle from the gyro
@@ -347,6 +369,9 @@ public class Robot extends TimedRobot {
         // } else {
         // SmartDashboard.putString("AprilTag", "No AprilTag detected");
         // }
+
+        arm.absAngle();
+
     }
 
     // periodic == happens like every milisecond
@@ -355,7 +380,7 @@ public class Robot extends TimedRobot {
         m_autoSelected = m_chooser.getSelected();
         // m_autoSelected = SmartDashboard.getString("Auto Selector", kDefaultAuto);
         System.out.println("Auto selected: " + m_autoSelected);
-
+        moveMotorID5.getEncoder().setPosition(0);
     }
 
     /** This function is called periodically during autonomous. */
@@ -369,23 +394,23 @@ public class Robot extends TimedRobot {
             case leftOneNote: // =====================================================================================================
                 switch (autoStepNum) {
                     case 1: // move arm up
-                        arm.moveToPosition(15);
-                        if (arm.getArmAngle() == 15) {
+                        arm.moveToPosition(55);
+                        if (Math.abs(arm.getArmAngle()-55) < 3) {
                             arm.setMotorPower(0);
                             autoStepNum = 2;
                             break;
                         }
                     case 2:
                         arm.shoot(0.5);
-                        if (arm.checkSensorandNotify() == true) {
+                        if (arm.hasNoNote()) 
+                        {
                             arm.shoot(0);
                             autoStepNum = 3;
                             break;
                         }
                     case 3:
                         distanceInInchesToMove = 12;
-                        if (Math.abs(moveMotorID5.getEncoder().getPosition()) < distanceInInchesToMove
-                                / inchesPerEnocderClick) {
+                        if (Math.abs(moveMotorID5.getEncoder().getPosition())*inchesPerEnocderClick < distanceInInchesToMove) {
                             autoMove(0.5, 0.5);
                         } else {
                             autoMove(0, 0);
@@ -420,24 +445,24 @@ public class Robot extends TimedRobot {
 
                 switch (autoStepNum) {
                     case 1:
-                        arm.moveToPosition(15);
-                        // }
-                        if (arm.getArmAngle() == 15) {
+                        arm.moveToPosition(55);
+                        if (Math.abs(arm.getArmAngle()-55) < 3) {
                             arm.setMotorPower(0);
                             autoStepNum = 2;
                             break;
                         }
+                        
                     case 2:
                         arm.shoot(0.5);
-                        if (arm.checkSensorandNotify() == true) {
+                        if (arm.hasNoNote()) 
+                        {
                             arm.shoot(0);
                             autoStepNum = 3;
                             break;
                         }
                     case 3:
                         distanceInInchesToMove = 12;
-                        if (Math.abs(moveMotorID5.getEncoder().getPosition()) < distanceInInchesToMove
-                                / inchesPerEnocderClick) {
+                        if (Math.abs(moveMotorID5.getEncoder().getPosition())*inchesPerEnocderClick < distanceInInchesToMove) {
                             autoMove(0.5, 0.5);
                         } else {
                             autoMove(0, 0);
@@ -469,19 +494,22 @@ public class Robot extends TimedRobot {
 
                 }
 
-            case middleTwoNote: // ====================================================================================================
+            case middleTwoNote: 
+            // ====================================================================================================
+            
 
                 switch (autoStepNum) {
                     case 1: // arm goes up
-                        arm.moveToPosition(15);
-                        if (arm.getArmAngle() == 15) {
+                        arm.moveToPosition(55);
+                        if (Math.abs(arm.getArmAngle()-55) < 3) {
                             arm.setMotorPower(0);
                             autoStepNum = 2;
                             break;
                         }
                     case 2: // shoot
                         arm.shoot(0.5);
-                        if (arm.checkSensorandNotify() == true) {
+                        if (arm.hasNoNote()) 
+                        {
                             arm.shoot(0);
                             autoStepNum = 3;
                             break;
@@ -489,7 +517,7 @@ public class Robot extends TimedRobot {
 
                     case 3: // move arm down
                         arm.moveToPosition(0);
-                        if (arm.getArmAngle() == 0) {
+                        if (Math.abs(arm.getArmAngle()) < 3) {
                             arm.setMotorPower(0);
                             autoStepNum = 4;
                             break;
@@ -498,7 +526,7 @@ public class Robot extends TimedRobot {
                     case 4: // move forward to other note
                         // distanceInInchesToMove = 65;
                         arm.intake(0.5);
-                        if (arm.checkSensorandNotify() == true) {
+                        if (arm.hasNoNote() == true) {
                             autoMove(0.5, 0.5);
                             autoXValueTwoNote = moveMotorID5.getEncoder().getPosition();
                         } else {
@@ -517,7 +545,7 @@ public class Robot extends TimedRobot {
                         }
                     case 6:
                         arm.shoot(0.5);
-                        if (arm.checkSensorandNotify() == true) {
+                        if (arm.hasNoNote() == true) {
                             arm.shoot(0);
                             autoStepNum = 0;
                             break;
@@ -538,7 +566,7 @@ public class Robot extends TimedRobot {
     /** This function is called once when teleop is enabled. */
     @Override
     public void teleopInit() {
-
+        //arm.SetArmTo0();
     }
 
     /** This function is called periodically during operator control. */
@@ -546,27 +574,65 @@ public class Robot extends TimedRobot {
     public void teleopPeriodic() {
 
         // Drives robot using controller X and Y axis
-        differentialDrive.arcadeDrive(limiter0.calculate(joystick.getX() * driveSpeed * 0.5),
+        differentialDrive.arcadeDrive(limiter0.calculate(joystick.getX() * driveSpeed * 0.4),
                 limiter1.calculate(joystick.getY() * driveSpeed));
         // eventually will define what each word means, e.g limiter1 refers safety in
         // limiting acceleration speed
 
         // Pitching the arm
 
+        /*
         dPadValue = joystick.getPOV();
 
         if (dPadValue == 0)
         {
-            arm.setMotorPower(0.2);
+            arm.setMotorPower(-0.5);
         }
         else if (dPadValue == 180)
         {
-            arm.setMotorPower(-0.2);
+            arm.setMotorPower(0.5);
         }
+        */        
+        
+
+        if (Math.abs(joystick.getThrottle()) > 0.1)
+        {
+            //arm.tempAngle = 0;
+            //SmartDashboard.putString("new big value", String.valueOf(test));
+            arm.setMotorPower(joystick.getThrottle());
+            //arm.armMotor1.getEncoder().setPosition(arm.lastSaveAngle);
+            test = arm.getArmAngle();
+            //SmartDashboard.putString("current angle", String.valueOf(test));
+
+        }
+        //if (Math.abs(joystick.getThrottle()) >= 0.5)
+        //    arm.setMotorPower(-0.05);
+
+        //else if (joystick.getRawButton(2))
+            //arm.moveToPosition(55);
+            //arm.armMotor1.
+        
+
         else 
         {
-            arm.setMotorPower(0);
+            //arm.setMotorPower(0);
+            //if (arm.testAngle() <= 0)
+            //{
+            arm.setMotorPower(-0.05); // MAKE SURE NEGATIVE AND POSITIVE ARE PROPER DIRECTIONS
+            //arm.setMotorPower(0);
+                //arm.armMotor2.set(-0.05);
+            //}
+            //else if (arm.testAngle() >= 0)
+            //{
+                //arm.setMotorPower(-0.05);
+                //arm.armMotor2.set(-0.05);
+            //}
+            //arm.setMotorPower(-0.05);
         }
+
+        if (joystick.getRawButtonPressed(9))
+            arm.SetArmTo0();
+        
 
 
 
@@ -585,26 +651,55 @@ public class Robot extends TimedRobot {
         // } else if (joystick.getY() < 0 && pos > 0) {
         // arm.moveToPosition(pos - 10);
         // }
+        
 
         // Running intake
         if (joystick.getRawButton(6))
-            arm.intake(0.5); // get actual power variable
+        {
+            
+            if (arm.hasNoNote() == false/* && temp == 0*/)  {// note detected
+                //arm.sendNoteToShooter(-0.2);
+                SmartDashboard.putString("f", "hello");
+                arm.intake(0);
+            }
+            else /*if(temp == 0)*/ {
+                arm.intake(0.4); // get actual power variable
+                SmartDashboard.putString("f", "goodbye");
+            }
+
+        }
+
+        
+
         //} else
         //    arm.intake(0);
 
         // Shooting
-        else if (joystick.getRawButton(8))
+        else if (joystick.getRawButton(8)) // speaker shot
             arm.shoot(0.7); // ^^^
+
+        else if (joystick.getRawButton(7)) // dunk, amp shot
+        {
+            arm.shoot(0.1);
+        }
+
         else
             arm.shoot(0); //THIS HAPPENS TWICE
+            //temp = 0;
+
+        //arm.giveAngle();
 
         // Automatically Shooting
-        if (joystick.getRawButton(1)) // TODO: Remap button, I chose this randomly
+        if (joystick.getRawButton(10)) // TODO: Remap button, I chose this randomly
             automaticallyShoot();
-        ; // Only runs when AprilTag is detected
+         // Only runs when AprilTag is detected
+
+        // Set Arm angle to 0
+        //if (joystick.getRawButtonPressed(11))
+          //  arm.SetArmTo0();
 
         // Running climber
-        if (joystick.getRawButton(3)) {
+        if (joystick.getRawButton(1)) {
             climberMotor1.set(0.5); // TODO: Adjust climber speed as needed
             climberMotor2.set(0.5);
         } else if (joystick.getRawButton(4)) {

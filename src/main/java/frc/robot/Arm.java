@@ -5,6 +5,12 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.AnalogInput;
+import edu.wpi.first.wpilibj.DutyCycleEncoder;
+
+import java.util.LinkedList;
+import java.util.ArrayList;
+
 
 /**
  * Class that represents the controller for the physical robot's arm.
@@ -20,17 +26,27 @@ public class Arm {
     private CANSparkMax shooterMotor2;
     private DigitalInput proximitySensor;
     public double ampPosition;
+    //public CANEncoder encoder = armMotor1.getEncoder();
+
 
     public double lastCheckingSpeedTime = 0;
     public double lastEncoderValue = 0;    
     public double lastShooterSpeed = 0;
     
     // constants
-    final double sprocketToMotorRatio = 0.5; // TODO: Update value
+    final double sprocketToMotorRatio = 18/72; // TODO: Update value
     final double armAngleToEncoderPosition = 360/42 * sprocketToMotorRatio;
-    private final double armInitialAngle = 0; // TODO: Update value, angle the note would be shot out at from the shooter
-    public double maxArmAngle = 180; // TODO: Update safety value
-    public double minArmAngle = 0; // TODO: Update safety value
+    double armInitialAngle = -35.2; // TODO: Update value, angle the note would be shot out at from the shooter
+    public double maxArmAngle = 360; // TODO: Update safety value
+    public double minArmAngle = -50; // TODO: Update safety value
+    public double lastSaveAngle = 0;
+    public double tempAngle;
+
+    public DutyCycleEncoder encoder;
+    public double absolAngle;
+
+    AnalogInput armAnglePot;
+    ArrayList<Integer> runningAverageDatapoints;
     
     /**
      * Constructor that initializes the motor and sensor objects
@@ -43,6 +59,11 @@ public class Arm {
         shooterMotor1 = new CANSparkMax(4, MotorType.kBrushless); // left shooter
         shooterMotor2 = new CANSparkMax(9, MotorType.kBrushless); // right shooter
 
+        armAnglePot = new AnalogInput(3);
+        encoder = new DutyCycleEncoder(4);
+
+        runningAverageDatapoints = new ArrayList<>();
+        
         // TODO: Invert motors running backwards to what is expected during testing
         // moveMotorIDX.setInverted(true); // wiring thing, motor is flipped, bad wiring
 
@@ -55,17 +76,28 @@ public class Arm {
      * 
      * @return true if nothing is detected
      */
-    public boolean checkSensorandNotify() { // method to return whether a note is loaded or not
+    public boolean hasNoNote() { // method to return whether a note is loaded or not
         boolean noNoteDetected = proximitySensor.get(); // This will return true if nothing is detected
         // Assuming the sensor output is HIGH when an object is detected
         if (noNoteDetected) { // When no note is detected, this if statement occurs
-            SmartDashboard.putString("Alert", "No note in the intake.");
+            SmartDashboard.putString("Alert", "NO NOTE!");
         }
         // turn LED colour
         else { // When note is detected, this else statement occurs
-            SmartDashboard.putString("Alert", "Note is in the intake!");
+            SmartDashboard.putString("Alert", "YES NOTE!");
         }
         return noNoteDetected;
+    }
+
+    public double testAngle() {
+        //armMotor1.getEncoder().setPosition(0);
+        double currentEncoderPositions = armMotor2.getEncoder().getPosition(); // TODO: Make sure when the motor is applied positive power the encoder value goes up
+        tempAngle = currentEncoderPositions * 90/42 /*0.034014*/ /*+ armInitialAngle*/; //what is 90 / 42? (42 == 14 permant magnets, by 3 hallsensor, which means 42 pulses read per rotation)
+        SmartDashboard.putString("2nd motor, angle", String.valueOf(tempAngle));   
+        //SmartDashboard.putString("ONE MORE TIME", String.valueOf(currentEncoderPositions));   
+
+
+        return tempAngle;
     }
 
     /**
@@ -76,11 +108,51 @@ public class Arm {
      * @return the angle the shooter is pointed at in degrees
      */
     public double getArmAngle() {
-        double currentEncoderPosition = armMotor1.getEncoder().getPosition(); // TODO: Make sure when the motor is applied positive power the encoder value goes up
-        double currentAngle = currentEncoderPosition * armAngleToEncoderPosition + armInitialAngle;
+        //double currentEncoderPosition = lastSaveAngle;
+        //armMotor1.getEncoder().setPosition(lastSaveAngle);
+        double currentEncoderPosition = (armMotor1.getEncoder().getPosition()); // TODO: Make sure when the motor is applied positive power the encoder value goes up
+        //lastSaveAngle = currentEncoderPosition;
+        double currentAngle = currentEncoderPosition * 90/42 /*0.034014*/  /*+ armInitialAngle*/; //what is 90 / 42? (42 == 14 permant magnets, by 3 hallsensor, which means 42 pulses read per rotation)
+        //SmartDashboard.putString("test value", String.valueOf(currentEncoderPosition));   
+
+        SmartDashboard.putString("1st motor, arm angle", String.valueOf(currentAngle));   
+
+        //return currentAngle;
+        /*
+        // POT
+        int armAngle = armAnglePot.getValue(); // string thing that attempts to stop arm from falling
+        SmartDashboard.putString("PArm Angle", String.valueOf(armAngle));   
+        
+        // average
+        if (runningAverageDatapoints.size()>=25)
+        {
+            runningAverageDatapoints.remove(0);
+            runningAverageDatapoints.add(armAngle);
+        }
+        else
+            runningAverageDatapoints.add(armAngle);
+
+        int sum = 0;
+        for (double X : runningAverageDatapoints) {
+            sum += X; 
+        }
+        double a = ((double)sum)/runningAverageDatapoints.size();
+        SmartDashboard.putString("P-AvgArm Angle", String.valueOf(a));   
+        //SmartDashboard.putString("PArm Angle", String.valueOf());   
+        SmartDashboard.putString("P-AvgArm Angle", String.valueOf(a*0.0599363-190.013));   
+        */
+
         return currentAngle;
     }
+    
+    public double absAngle()
+    {
+        encoder.setDistancePerRotation(4.0);
+        absolAngle = encoder.getDistance();
+        //encoder.setDistancePerRotation(4.0);
 
+        return absolAngle;
+    }
 
     public double getAcceleration()
     {
@@ -180,9 +252,6 @@ public class Arm {
         intakeMotor.set(-power);
     }
 
-    public void sendNoteToShooter2(double power) {
-        intakeMotor.set(-power);
-    }
 
     // Runs the intake motor at the specified power , automatically shuts off if
     // note is detected
@@ -203,32 +272,8 @@ public class Arm {
         //    power = -maxPower;
         //}
 
-        //sendNoteToShooter(power); // check if this works
-
-        //if (checkSensorandNotify() == false)
-            //note detected
-            // once the note is in the intake the motor stops
-        //    intakeMotor.set(0);
-        //else
-            //no note detected
-            // if there is no note the intake motor runs
-            //intakeMotor.set(-power); 
-            //sendNoteToShooter(power);
-            //prepareToShoot(power);
-
-            //{
-        // Start to run the shooter motors at the specified speed
-        //prepareToShoot(power);
-
-            //final double accelerationThreshold = 0.1; // TODO: Adjust as needed, this should be as low as possible while being timely and accurate
-            //double curAvgAcceleration = getAcceleration();
-
-            // if shooter speed has leveled out, fire, otherwise wait
-            //if (lastShooterSpeed != 0 && curAvgAcceleration <= accelerationThreshold)
-            //    sendNoteToShooter(power==0?0:1);
-            //else sendNoteToShooter(0);
-        sendNoteToShooter2(power);
-        //}
+        
+        sendNoteToShooter(power);
 
 
         }
@@ -265,9 +310,19 @@ public class Arm {
             angle = minArmAngle;
         }
 
-        final double Kp = 0.05; // TODO: adjust during testing, make this as large as possible without regularly overshooting the target angle
+        final double Kp = 0.2; // TODO: adjust during testing, make this as large as possible without regularly overshooting the target angle
         double error = angle - getArmAngle(); // current position (after converting)*****
         double power = Kp * error;
         setMotorPower(power);
     }
+
+
+    /*
+     * Sets the arm angle to 0.
+     */
+    public void SetArmTo0() {
+        armMotor1.getEncoder().setPosition(0);
+        
+    }
+
 }

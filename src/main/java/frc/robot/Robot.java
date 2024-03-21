@@ -595,6 +595,7 @@ public class Robot extends TimedRobot {
         */        
         
 
+
         if (Math.abs(joystick.getThrottle()) > 0.1)
         {
             //arm.tempAngle = 0;
@@ -618,8 +619,8 @@ public class Robot extends TimedRobot {
             //arm.setMotorPower(0);
             //if (arm.testAngle() <= 0)
             //{
-            arm.setMotorPower(-0.05); // MAKE SURE NEGATIVE AND POSITIVE ARE PROPER DIRECTIONS
-            //arm.setMotorPower(0);
+            //arm.setMotorPower(-0.05); // MAKE SURE NEGATIVE AND POSITIVE ARE PROPER DIRECTIONS
+            arm.setMotorPower(0);
                 //arm.armMotor2.set(-0.05);
             //}
             //else if (arm.testAngle() >= 0)
@@ -630,9 +631,9 @@ public class Robot extends TimedRobot {
             //arm.setMotorPower(-0.05);
         }
 
-        if (joystick.getRawButtonPressed(9))
-            arm.SetArmTo0();
-        
+        if (joystick.getRawButtonPressed(9)) //back button
+            //arm.SetArmTo0();
+            arm.encoder.reset();
 
 
 

@@ -44,6 +44,7 @@ public class Arm {
 
     public DutyCycleEncoder encoder;
     public double absolAngle;
+    public double cameronWhy;
 
     AnalogInput armAnglePot;
     ArrayList<Integer> runningAverageDatapoints;
@@ -60,7 +61,7 @@ public class Arm {
         shooterMotor2 = new CANSparkMax(9, MotorType.kBrushless); // right shooter
 
         armAnglePot = new AnalogInput(3);
-        encoder = new DutyCycleEncoder(4);
+        encoder = new DutyCycleEncoder(0);
 
         runningAverageDatapoints = new ArrayList<>();
         
@@ -147,9 +148,30 @@ public class Arm {
     
     public double absAngle()
     {
-        encoder.setDistancePerRotation(4.0);
-        absolAngle = encoder.getDistance();
         //encoder.setDistancePerRotation(4.0);
+
+        /*not important*/ //encoder.close(); 
+        absolAngle = encoder.get() * 3; //Get the encoder value since the last reset.
+        encoder.getAbsolutePosition(); //Get the absolute position of the duty cycle encoder.
+        encoder.getDistance(); //Get the distance the sensor has driven since the last reset as scaled by the value from setDistancePerRotation(double).
+        encoder.getDistancePerRotation(); //Get the distance per rotation for this encoder.
+        /*not important*/ //encoder.getFPGAIndex(); //Get the FPGA index for the DutyCycleEncoder.
+        /*not important*/ //encoder.getFrequency();	//Get the frequency in Hz of the duty cycle signal from the encoder.
+        /*not important*/ //encoder.getPositionOffset(); //Get the offset of position relative to the last reset.
+        /*not important*/ //encoder.getSourceChannel(); //Get the channel of the source.
+        /*not important*/ //encoder.initSendable​(SendableBuilder builder); //Initializes this Sendable object.
+        /*not important*/ //encoder.isConnected(); //Get if the sensor is connected
+        //encoder.reset(); //Reset the Encoder distance to zero.
+        /*not important*/ //encoder.setConnectedFrequencyThreshold​(int frequency); //Change the frequency threshold for detecting connection used by isConnected().
+        /*not important*/ //encoder.setDistancePerRotation​(double distancePerRotation); //Set the distance per rotation of the encoder.
+        /*not important*/ //encoder.setDutyCycleRange​(double min, double max); //Set the encoder duty cycle range.
+        //encoder.setPositionOffset​(double offset); //Set the position offset.
+
+        //encoder.getAbsolutePosition(); //Get the absolute position of the duty cycle encoder.
+        //absolAngle = encoder.getDistance(); //
+        SmartDashboard.putString("updating arm angle", String.valueOf(absolAngle)); 
+        SmartDashboard.putString("absolute angle", String.valueOf(encoder.getAbsolutePosition() * 3)); 
+
 
         return absolAngle;
     }

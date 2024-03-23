@@ -151,7 +151,7 @@ public class Arm {
         //encoder.setDistancePerRotation(4.0);
 
         /*not important*/ //encoder.close(); 
-        absolAngle = encoder.get() * 3; //Get the encoder value since the last reset.
+        absolAngle = encoder.get() * 360/*3.85*/; //Get the encoder value since the last reset.
         encoder.getAbsolutePosition(); //Get the absolute position of the duty cycle encoder.
         encoder.getDistance(); //Get the distance the sensor has driven since the last reset as scaled by the value from setDistancePerRotation(double).
         encoder.getDistancePerRotation(); //Get the distance per rotation for this encoder.
@@ -326,16 +326,41 @@ public class Arm {
      * Sets the shooting angle to the angle specified.
      */
     public void moveToPosition(double angle) {
-        if (angle > maxArmAngle) {
-            angle = maxArmAngle;
-        } else if (angle < minArmAngle) {
-            angle = minArmAngle;
+        //if (angle > maxArmAngle) {
+        //    angle = maxArmAngle;
+        //} else if (angle < minArmAngle) {
+        //    angle = minArmAngle;
+        //}
+
+        //final double Kp = 0.2; // TODO: adjust during testing, make this as large as possible without regularly overshooting the target angle
+        //double error = angle - getArmAngle(); // current position (after converting)*****
+        //double power = Kp * error;
+        //setMotorPower(power);
+    }
+
+    public void autoAngle(double angle)
+    {
+        if(absolAngle >= angle && absolAngle <= (angle + 3))
+        {
+            armMotor1.set(0.03);
+            armMotor2.set(0.03);
+        }
+        else if (absolAngle >= angle && absolAngle >= (angle + 3))
+        {
+            armMotor1.set(0.4);
+            armMotor2.set(0.4);
         }
 
-        final double Kp = 0.2; // TODO: adjust during testing, make this as large as possible without regularly overshooting the target angle
-        double error = angle - getArmAngle(); // current position (after converting)*****
-        double power = Kp * error;
-        setMotorPower(power);
+        else if (absolAngle <= angle && absolAngle <= (angle - 3))
+        {
+            armMotor1.set(-0.4);
+            armMotor2.set(-0.4);
+        }
+        else if (absolAngle <= angle && absolAngle >= (angle - 3))
+        {
+            armMotor1.set(-0.03);
+            armMotor2.set(-0.03);
+        }
     }
 
 

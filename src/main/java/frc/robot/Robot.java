@@ -22,7 +22,6 @@ import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import frc.robot.AprilTagTracking.*;
-//import edu.wpi.first.wpilibj.DutyCycleEncoder;
 
 
 import edu.wpi.first.wpilibj.motorcontrol.Spark;
@@ -34,7 +33,6 @@ import javax.lang.model.util.ElementScanner14;
 
 import frc.robot.Arm;
 
-import com.ctre.phoenix6.controls.DifferentialPositionDutyCycle;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.None;
 import com.kauailabs.navx.frc.AHRS;
 import com.revrobotics.CANSparkMax;
@@ -121,7 +119,8 @@ public class Robot extends TimedRobot {
     public double autoXValueTwoNote; // used to get angle for middle two note auto shooting angle
     //public int temp = 0;
     public int dPadValue;
-    public double test;
+    public Timer timer;
+    public Timer autoTimer;
 
     /**
      * Determines the angle needed to shoot the ring at.
@@ -223,11 +222,6 @@ public class Robot extends TimedRobot {
         }
     }
 
-    //public void Timer()
-    //{
-
-    //}
-
     /**
      * This function is run when the robot is first started up and should be used
      * for any initialization code.
@@ -244,15 +238,13 @@ public class Robot extends TimedRobot {
                 isRed = false;
             }
         }
+
         // Initialize arm and vision system components
+        
         aprilTagTracker = new AprilTagTracker("Arducam_OV9281_USB_Camera");
         arm = new Arm();
 
-        //arm.getArmAngle();
-
-        arm.armMotor1.getEncoder().setPosition(1);
-        SmartDashboard.putString("1st motor, arm angle", String.valueOf(arm.armMotor1.getEncoder().getPosition()));
-
+        timer = new Timer();
 
         // Places a compass indicator for the gyro heading on the dashboard
         gyro = new AHRS(SerialPort.Port.kUSB);
@@ -277,9 +269,6 @@ public class Robot extends TimedRobot {
 
         // Initialize joystick object
         joystick = new Joystick(0); // Controller in port 0
-
-        //DutyCycleEncoder encoder = new DutyCycleEncoder(3);
-
 
         // Drive motor object initialization
         moveMotorID5 = new CANSparkMax(5, MotorType.kBrushless); // NEO motor with CAN ID 5, right side
@@ -317,10 +306,14 @@ public class Robot extends TimedRobot {
     public void robotPeriodic() {
 
         //arm.getArmAngle();
-        SmartDashboard.putString("current step text", String.valueOf(autoStepNum));
 
-        arm.armMotor1.getEncoder().setPosition(1);
-        SmartDashboard.putString("1st motor, arm angle", String.valueOf(arm.armMotor1.getEncoder().getPosition()));
+        //double test = arm.getArmAngle(); // test == what I want the angle to be, need a variable 
+
+        arm.absAngle();
+        SmartDashboard.putString("note timer", String.valueOf(timer.get())); 
+
+
+        SmartDashboard.putString("current step text", String.valueOf(autoStepNum));
 
         // Updates the target's seen by the vision system
         aprilTagTracker.UpdateTracker();
@@ -369,14 +362,12 @@ public class Robot extends TimedRobot {
         // } else {
         // SmartDashboard.putString("AprilTag", "No AprilTag detected");
         // }
-
-        arm.absAngle();
-
     }
 
     // periodic == happens like every milisecond
     @Override
     public void autonomousInit() {
+        autoTimer = new Timer();
         m_autoSelected = m_chooser.getSelected();
         // m_autoSelected = SmartDashboard.getString("Auto Selector", kDefaultAuto);
         System.out.println("Auto selected: " + m_autoSelected);
@@ -386,16 +377,33 @@ public class Robot extends TimedRobot {
     /** This function is called periodically during autonomous. */
     @Override
     public void autonomousPeriodic() {
+        SmartDashboard.putString("auto timer", String.valueOf(autoTimer.get())); 
         switch (m_autoSelected) {
             case kCustomAuto:
                 // Put custom auto code here
                 break;
 
             case leftOneNote: // =====================================================================================================
-                switch (autoStepNum) {
+            autoTimer.start();
+            SmartDashboard.putString("auto timer", String.valueOf(autoTimer.get())); 
+                //switch (autoStepNum) {
+                    //case 1:
+                        autoMove(0.2, -0.2);
+                        //distanceInInchesToMove = 12;
+                        if (autoTimer.get() >= 3) {
+                            autoMove(0, 0);
+                            autoStepNum = 2;
+                            break;
+                        }
+                        //else {
+                            //autoMove(0, 0);
+                            //autoStepNum = 4;
+                            //break;
+                        //}
+                    /* 
                     case 1: // move arm up
-                        arm.moveToPosition(55);
-                        if (Math.abs(arm.getArmAngle()-55) < 3) {
+                        arm.moveToPosition(-16);
+                        if (Math.abs(arm.getArmAngle()-55) < 3) { //change arm angle to encoder
                             arm.setMotorPower(0);
                             autoStepNum = 2;
                             break;
@@ -436,10 +444,11 @@ public class Robot extends TimedRobot {
                             autoStepNum = 0;
                             break;
                         }
-                    default:
+                    */
+                //    default:
 
-                        break;
-                }
+                //        break;
+                //}
 
             case rightOneNote: // =========================================================================================================
 
@@ -581,6 +590,7 @@ public class Robot extends TimedRobot {
 
         // Pitching the arm
 
+
         /*
         dPadValue = joystick.getPOV();
 
@@ -595,45 +605,23 @@ public class Robot extends TimedRobot {
         */        
         
 
-
         if (Math.abs(joystick.getThrottle()) > 0.1)
-        {
-            //arm.tempAngle = 0;
-            //SmartDashboard.putString("new big value", String.valueOf(test));
             arm.setMotorPower(joystick.getThrottle());
-            //arm.armMotor1.getEncoder().setPosition(arm.lastSaveAngle);
-            test = arm.getArmAngle();
-            //SmartDashboard.putString("current angle", String.valueOf(test));
 
-        }
-        //if (Math.abs(joystick.getThrottle()) >= 0.5)
-        //    arm.setMotorPower(-0.05);
-
-        //else if (joystick.getRawButton(2))
-            //arm.moveToPosition(55);
-            //arm.armMotor1.
+        else if (joystick.getRawButton(2)) // SPEAKER AUTO ANGLE
+            arm.autoAngle(-16); //EVENTUALLY CHANGE SO THAT ANGLES ARE IN QUADRANT 3!
         
-
+        else if (joystick.getRawButton(3)) //AMP AUTO ANGLE
+            arm.autoAngle(-105); //EVENTUALLY CHANGE SO THAT ANGLES ARE IN QUADRANT 3!
+        
         else 
         {
-            //arm.setMotorPower(0);
-            //if (arm.testAngle() <= 0)
-            //{
-            //arm.setMotorPower(-0.05); // MAKE SURE NEGATIVE AND POSITIVE ARE PROPER DIRECTIONS
             arm.setMotorPower(0);
-                //arm.armMotor2.set(-0.05);
-            //}
-            //else if (arm.testAngle() >= 0)
-            //{
-                //arm.setMotorPower(-0.05);
-                //arm.armMotor2.set(-0.05);
-            //}
-            //arm.setMotorPower(-0.05);
         }
 
-        if (joystick.getRawButtonPressed(9)) //back button
-            //arm.SetArmTo0();
-            arm.encoder.reset();
+        //if (joystick.getRawButtonPressed(9))
+        //    arm.SetArmTo0();
+        
 
 
 
@@ -659,13 +647,22 @@ public class Robot extends TimedRobot {
         {
             
             if (arm.hasNoNote() == false/* && temp == 0*/)  {// note detected
-                //arm.sendNoteToShooter(-0.2);
-                SmartDashboard.putString("f", "hello");
-                arm.intake(0);
+                timer.start();
+                
+                arm.sendNoteToShooter(-0.2);
+                SmartDashboard.putString("note timer", String.valueOf(timer.get())); 
+                if (timer.get() >= 5)
+                {
+                    arm.intake(0);
+                    timer.stop();
+                    timer.reset();
+                }
             }
             else /*if(temp == 0)*/ {
                 arm.intake(0.4); // get actual power variable
                 SmartDashboard.putString("f", "goodbye");
+                timer.stop();
+                timer.reset();
             }
 
         }
@@ -696,8 +693,9 @@ public class Robot extends TimedRobot {
          // Only runs when AprilTag is detected
 
         // Set Arm angle to 0
-        //if (joystick.getRawButtonPressed(11))
-          //  arm.SetArmTo0();
+        if (joystick.getRawButton(9))
+           arm.encoder.reset();
+            //arm.SetArmTo0();
 
         // Running climber
         if (joystick.getRawButton(1)) {

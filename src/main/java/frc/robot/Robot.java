@@ -64,7 +64,8 @@ public class Robot extends TimedRobot {
 
     private static final String rightOneNote = "Right One Note Auto";
     private static final String leftOneNote = "Left One Note Auto";
-    private static final String middleTwoNote = "Middle Two Note Auto";
+    private static final String middleOneNote = "Middle Two Note Auto";
+    private static final String straightUpAuto = "Straight Up Auto";
 
     private String m_autoSelected;
     private final SendableChooser<String> m_chooser = new SendableChooser<>();
@@ -261,9 +262,11 @@ public class Robot extends TimedRobot {
         // autoSelection = autoTab.add("Auto Selection", 1);
 
         m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
+        m_chooser.addOption("leftOneNote", straightUpAuto); // Just getting over the line, the smallest cheese
+
         m_chooser.addOption("leftOneNote", leftOneNote); // Both sides, if robot needs to turn left, small cheese
         m_chooser.addOption("rightOneNote", rightOneNote); // Both sides, if robot needs to turn left, small cheese
-        m_chooser.addOption("middleTwoNote", middleTwoNote); // Both sides, no turning, big cheese
+        m_chooser.addOption("middleOneNote", middleOneNote); // Both sides, no turning, big cheese
         m_chooser.addOption("kCustomAuto", kCustomAuto); // test/temporary
         SmartDashboard.putData("Auto choices", m_chooser);
 
@@ -383,18 +386,17 @@ public class Robot extends TimedRobot {
                 // Put custom auto code here
                 break;
 
-            case leftOneNote: // =====================================================================================================
-            autoTimer.start();
-            SmartDashboard.putString("auto timer", String.valueOf(autoTimer.get())); 
-                //switch (autoStepNum) {
-                    //case 1:
-                        autoMove(0.2, -0.2);
-                        //distanceInInchesToMove = 12;
-                        if (autoTimer.get() >= 3) {
-                            autoMove(0, 0);
-                            autoStepNum = 2;
+            case straightUpAuto: // JUST MOVE FORWARD A BIT
+                autoTimer.start();
+                SmartDashboard.putString("auto timer", String.valueOf(autoTimer.get())); 
+                            autoMove(0.2, -0.2);
+                            if (autoTimer.get() >= 3) {
+                                autoMove(0, 0);
                             break;
-                        }
+                            }
+            case leftOneNote: // =====================================================================================================
+            
+
                         //else {
                             //autoMove(0, 0);
                             //autoStepNum = 4;
@@ -503,10 +505,24 @@ public class Robot extends TimedRobot {
 
                 }
 
-            case middleTwoNote: 
+            case middleOneNote: //eventually, find a way to pick up another note
             // ====================================================================================================
-            
-
+                autoTimer.start();
+                arm.autoAngle(-16);
+                
+                SmartDashboard.putString("auto timer", String.valueOf(autoTimer.get())); 
+                if (autoTimer.get() >= 5) {
+                    arm.shoot(0.7);
+                    if (autoTimer.get() >= 10)
+                    {
+                        autoMove(0.2, -0.2);
+                        if (autoTimer.get() >= 2) {
+                            autoMove(0, 0);
+                            break;
+                        }
+                    }
+                }
+                /*
                 switch (autoStepNum) {
                     case 1: // arm goes up
                         arm.moveToPosition(55);
@@ -564,6 +580,7 @@ public class Robot extends TimedRobot {
 
                         break;
                 }
+                */
 
             case kDefaultAuto:
             default:
@@ -580,7 +597,7 @@ public class Robot extends TimedRobot {
 
     /** This function is called periodically during operator control. */
     @Override
-    public void teleopPeriodic() {
+    public void teleopPeriodic() { // CONSIDER ADDING NEGATIVE TO DRIVESPEED, ORANGE BECOMES FRONT, GREEN BECOMES BACK
 
         // Drives robot using controller X and Y axis
         differentialDrive.arcadeDrive(limiter0.calculate(joystick.getX() * driveSpeed * 0.4),
@@ -647,7 +664,7 @@ public class Robot extends TimedRobot {
         {
             
             if (arm.hasNoNote() == false/* && temp == 0*/)  {// note detected
-                timer.start();
+                timer.start(); //eventually remove time, make sensor work
                 
                 arm.sendNoteToShooter(-0.2);
                 SmartDashboard.putString("note timer", String.valueOf(timer.get())); 

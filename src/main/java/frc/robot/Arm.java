@@ -368,25 +368,25 @@ public class Arm {
 
     public void autoAngle(double angle) //angle = desired angle, absol angle = current angle
     {
-        if(absolAngle >= angle && absolAngle <= (angle + 5))
+        if(absolAngle >= angle && absolAngle <= (angle + 5)) //from below, moving up slow
         {
-            armMotor1.set(0.03);
+            armMotor1.set(-0.03);
             armMotor2.set(0.03);
         }
-        else if (absolAngle >= angle && absolAngle >= (angle + 5))
+        else if (absolAngle >= angle && absolAngle >= (angle + 5)) //from below, moving up fast
         {
-            armMotor1.set(0.3);
+            armMotor1.set(-0.3);
             armMotor2.set(0.3);
         }
 
-        else if (absolAngle <= angle && absolAngle <= (angle - 5))
+        else if (absolAngle <= angle && absolAngle <= (angle - 5)) //from above, moving fast
         {
-            armMotor1.set(-0.3);
+            armMotor1.set(0.3);
             armMotor2.set(-0.3);
         }
-        else if (absolAngle <= angle && absolAngle >= (angle - 5))
+        else if (absolAngle <= angle && absolAngle >= (angle - 5)) //from above, moving slows
         {
-            armMotor1.set(-0.03);
+            armMotor1.set(0.03);
             armMotor2.set(-0.03);
         }
     }

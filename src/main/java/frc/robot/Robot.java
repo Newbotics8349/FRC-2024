@@ -343,10 +343,10 @@ public class Robot extends TimedRobot {
         aprilTagTracker.UpdateTracker();
 
         // Tells the driver if the speaker's center April tag is located
-        if ((isRed && aprilTagTracker.HasTargetWithId(4)) || (!isRed && aprilTagTracker.HasTargetWithId(7)))
-            SmartDashboard.putString("AprilTag", "Middle Speaker AprilTag detected");
-        else
-            SmartDashboard.putString("AprilTag", "No Speaker AprilTag detected");
+        //if ((isRed && aprilTagTracker.HasTargetWithId(4)) || (!isRed && aprilTagTracker.HasTargetWithId(7)))
+            //SmartDashboard.putString("AprilTag", "Middle Speaker AprilTag detected");
+        //else
+            //SmartDashboard.putString("AprilTag", "No Speaker AprilTag detected");
 
         // Provides diagnostic data to the driver
         // Detects if there is a note in the intake
@@ -587,7 +587,7 @@ public class Robot extends TimedRobot {
                     {
                         autoMove(0.2, -0.2);
                         arm.shoot(0);
-                        if (autoTimer.get() >= 7) {
+                        if (autoTimer.get() >= 9) {
                             autoMove(0, 0);
                             break;
                         }
@@ -821,20 +821,17 @@ public class Robot extends TimedRobot {
 
         // Running climber
         if (joystick.getRawButton(1)) { // down// x
-            LeftServo.setAngle(20);
-            RightServo.setAngle(-20);
-            SmartDashboard.putString("climb test", "1");
+            //LeftServo.setAngle(0);
+            //RightServo.setAngle(40);
             climberMotor1.set(0.5); // TODO: Adjust climber speed as needed
-            climberMotor2.set(0.5);
-        } else if (joystick.getRawButton(4)) { // up // y
-            LeftServo.setAngle(-20);
-            RightServo.setAngle(20);
-            SmartDashboard.putString("climb test", "4");
-            climberMotor1.set(-0.5);
             climberMotor2.set(-0.5);
+        } else if (joystick.getRawButton(4)) { // up // y //IGNORE Y FOR NOW
+            //LeftServo.setAngle(40);
+            //RightServo.setAngle(0);
+            climberMotor1.set(-0.5);
+            climberMotor2.set(0.5);
         } 
         else {
-            SmartDashboard.putString("climb test", "7");
             climberMotor1.set(0);
             climberMotor2.set(0);
         }

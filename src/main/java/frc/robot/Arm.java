@@ -170,7 +170,6 @@ public class Arm {
         //encoder.getAbsolutePosition(); //Get the absolute position of the duty cycle encoder.
         //absolAngle = encoder.getDistance(); //
         SmartDashboard.putString("updating arm angle", String.valueOf(absolAngle)); 
-        SmartDashboard.putString("absolute angle", String.valueOf(encoder.getAbsolutePosition() * 3)); 
 
 
         return absolAngle;
@@ -325,38 +324,67 @@ public class Arm {
     /*
      * Sets the shooting angle to the angle specified.
      */
-    public void moveToPosition(double angle) {
+    public void PID(double angle) {
         //if (angle > maxArmAngle) {
         //    angle = maxArmAngle;
         //} else if (angle < minArmAngle) {
         //    angle = minArmAngle;
         //}
 
-        //final double Kp = 0.2; // TODO: adjust during testing, make this as large as possible without regularly overshooting the target angle
-        //double error = angle - getArmAngle(); // current position (after converting)*****
+        //final double Kp = 0.001; // TODO: adjust during testing, make this as large as possible without regularly overshooting the target angle
+        //double error = angle - absolAngle; // current position (after converting)*****
         //double power = Kp * error;
+        //SmartDashboard.putString("ERROR!!!", String.valueOf(error)); 
+        //SmartDashboard.putString("PID POWER!!!", String.valueOf(power)); 
         //setMotorPower(power);
     }
 
-    public void autoAngle(double angle)
+    /*
+    public void autoAngle(double angle) //angle = desired angle, absol angle = current angle
     {
-        if(absolAngle >= angle && absolAngle <= (angle + 3))
+        if(absolAngle >= angle && absolAngle <= (angle + 5))
         {
             armMotor1.set(0.03);
             armMotor2.set(0.03);
         }
-        else if (absolAngle >= angle && absolAngle >= (angle + 3))
+        else if (absolAngle >= angle && absolAngle >= (angle + 5))
         {
             armMotor1.set(0.4);
             armMotor2.set(0.4);
         }
 
-        else if (absolAngle <= angle && absolAngle <= (angle - 3))
+        else if (absolAngle <= angle && absolAngle <= (angle - 5))
         {
             armMotor1.set(-0.4);
             armMotor2.set(-0.4);
         }
-        else if (absolAngle <= angle && absolAngle >= (angle - 3))
+        else if (absolAngle <= angle && absolAngle >= (angle - 5))
+        {
+            armMotor1.set(-0.03);
+            armMotor2.set(-0.03);
+        }
+    }
+    */
+
+    public void autoAngle(double angle) //angle = desired angle, absol angle = current angle
+    {
+        if(absolAngle >= angle && absolAngle <= (angle + 5))
+        {
+            armMotor1.set(0.03);
+            armMotor2.set(0.03);
+        }
+        else if (absolAngle >= angle && absolAngle >= (angle + 5))
+        {
+            armMotor1.set(0.3);
+            armMotor2.set(0.3);
+        }
+
+        else if (absolAngle <= angle && absolAngle <= (angle - 5))
+        {
+            armMotor1.set(-0.3);
+            armMotor2.set(-0.3);
+        }
+        else if (absolAngle <= angle && absolAngle >= (angle - 5))
         {
             armMotor1.set(-0.03);
             armMotor2.set(-0.03);
@@ -364,11 +392,12 @@ public class Arm {
     }
 
 
+
     /*
      * Sets the arm angle to 0.
      */
     public void SetArmTo0() {
-        armMotor1.getEncoder().setPosition(0);
+        encoder.reset();
         
     }
 
